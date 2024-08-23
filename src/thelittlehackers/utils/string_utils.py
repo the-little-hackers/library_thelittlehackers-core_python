@@ -21,13 +21,22 @@
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+from __future__ import annotations
+
+import dateutil.parser
+from datetime import date
+from datetime import datetime
 from uuid import UUID
 
 from thelittlehackers.utils import any_utils
 from thelittlehackers.utils.any_utils import is_empty_or_none
 
 
-def string_to_boolean(value: bool | str | None, strict=False, default_value=False):
+def string_to_boolean(
+        value: bool | str | None,
+        strict: bool = False,
+        default_value: bool = False
+):
     """
     Convert a string representation of a boolean value to its
     corresponding boolean.
@@ -42,15 +51,18 @@ def string_to_boolean(value: bool | str | None, strict=False, default_value=Fals
 
     :param value: The input to be converted into a boolean.
 
-    :param strict: If ``True``, raises a ``ValueError`` if the string does
-        not represent a valid boolean. Defaults to `False`.
+    :param strict: A boolean flag indicating whether to enforce strict
+        validation.  If ``True``, a ``ValueError`` is raised for invalid
+        boolean strings.  If ``False``, the function returns ``None`` for
+        invalid boolean strings.
 
     :param default_value: The boolean value to return if ``value`` is ``None``
-        or an empty string. Defaults to ``False``.
+        or an empty string.  Defaults to ``False``.
 
 
-    :return: The boolean value corresponding to the string, or `
-        `default_value`` if the string is not valid and `strict` is ``False``.
+    :return: The boolean value corresponding to the string, or
+        ``default_value`` if the string is not valid and ``strict`` is
+        ``False``.
 
 
     :raise ValueError: If ``strict`` is ```True``` and `value` does not
@@ -65,21 +77,65 @@ def string_to_boolean(value: bool | str | None, strict=False, default_value=Fals
     if isinstance(value, str) and value is not None:
         value = value.lower()
 
-    is_true = value in ('yes', 'y', 'true', 't', '1')
+    if value in ('yes', 'y', 'true', 't', '1'):
+        return True
 
-    if not is_true and strict and value not in ('no', 'n', 'false', 'f', '0'):
+    if value in ('no', 'n', 'false', 'f', '0'):
+        return False
+
+    if strict:
         raise ValueError(f"The string \"{value}\" doesn't represent a boolean value")
 
-    return is_true
+    return default_value
 
 
-def string_to_uuid(value: str, strict: bool = True) -> UUID:
+def string_to_date(
+        value: str | date | None = None,
+        strict: bool = True
+) -> date | None:
+    """
+    Convert a string representation of a date value to its corresponding
+    date.
+
+
+    :param value: The input to be converted into a date.
+
+    :param strict: A boolean flag indicating whether to enforce strict
+        validation.  If ``True``, a ``ValueError`` is raised for invalid
+        date strings.  If ``False``, the function returns ``None`` for
+        invalid date strings.
+
+
+    :return: The date value corresponding to the string.
+
+
+    :raise OverflowError: Raised if the parsed date exceeds the largest
+        valid C integer on your system.
+
+    :raise ValueError: If ``strict`` is ```True``` and ``value`` does not
+        represent a valid date or the string format is unknown.
+    """
+    try:
+        if not any_utils.is_empty_or_none(value):
+            return value if isinstance(value, date) \
+                else dateutil.parser.parse(value).date()
+    except ValueError as error:
+        if strict:
+            raise error
+
+    return None
+
+
+def string_to_uuid(
+        value: str | UUID | None,
+        strict: bool = True
+) -> UUID | None:
     """
     Convert a string representation of a UUID into a UUID object.
 
     This function attempts to parse the given string into a UUID object.
     If the string is not a valid UUID and strict mode is enabled, a
-    ``ValueError`` is raised. If strict mode is disabled, the function
+    ``ValueError`` is raised.  If strict mode is disabled, the function
     returns ``None`` when the string is not a valid UUID.
 
 
@@ -102,7 +158,8 @@ def string_to_uuid(value: str, strict: bool = True) -> UUID:
     """
     try:
         if not any_utils.is_empty_or_none(value):
-            return UUID(value)
+            return value if isinstance(value, UUID) \
+                else UUID(value)
     except ValueError as error:
         if strict:
             raise error
