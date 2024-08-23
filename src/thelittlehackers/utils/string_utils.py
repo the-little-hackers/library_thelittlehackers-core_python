@@ -28,6 +28,7 @@ from datetime import date
 from datetime import datetime
 from uuid import UUID
 
+from thelittlehackers.model.locale import Locale
 from thelittlehackers.utils import any_utils
 from thelittlehackers.utils.any_utils import is_empty_or_none
 
@@ -124,6 +125,39 @@ def string_to_date(
             raise error
 
     return None
+
+
+def string_to_locale(
+        value: str | Locale | None,
+        strict: bool = True
+) -> Locale | None:
+    """
+    Convert a string representation of a locale to its corresponding
+    ``Locale`` instance.
+
+
+    :param value: The input to be converted into a locale.  The input
+        needs to be a ISO 639-3 alpha-3 code (or alpha-2 code), optionally
+         followed by a dash character `-` and a ISO 3166-1 alpha-2 code.
+
+    :param strict: A boolean flag indicating whether to enforce strict
+        validation.  If ``True``, the input value must strictly comply
+        with RFC 4646, otherwise a ``ValueError`` is raised.  If ``False``,
+        the input value can be a Java-style locale (character `_` instead
+        of `-`).
+
+
+    :return: The ``Locale`` instance corresponding to the string.
+
+
+    :raise ValueError: If the input is ``None`` or if ``locale`` does not
+        represent a valid locale.
+    """
+    try:
+        return None if is_empty_or_none(value) else Locale.from_string(value, strict=strict)
+    except Locale.MalformedLocaleException as exception:
+        if strict:
+            raise exception
 
 
 def string_to_uuid(

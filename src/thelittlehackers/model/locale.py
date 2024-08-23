@@ -234,6 +234,10 @@ class Locale:
 
 
         :return: A locale or `None` if the argument `locale` is undefined.
+
+
+        :raise ValueError: If the input is ``None`` or if ``locale`` does not
+            represent a valid locale.
         """
         if not locale:
             return None
@@ -334,6 +338,10 @@ class Locale:
         :return: A tuple `(language_code, country_code)`, where the first code
             represents a ISO 639-3 alpha-3 code (or alpha-2 code), and the
             second code a ISO 3166-1 alpha-2 code.
+
+
+        :raise ValueError: If the input is ``None`` or if ``locale`` does not
+            represent a valid locale.
         """
         if locale is None:
             raise ValueError("Undefined value 'locale'")
