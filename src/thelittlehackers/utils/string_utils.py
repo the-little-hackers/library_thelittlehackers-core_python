@@ -150,8 +150,8 @@ def string_to_locale(
     :return: The ``Locale`` instance corresponding to the string.
 
 
-    :raise ValueError: If the input is ``None`` or if ``locale`` does not
-        represent a valid locale.
+    :raise MalformedLocaleException: If ``locale`` does not represent a
+        valid locale.
     """
     try:
         return None if is_empty_or_none(value) else Locale.from_string(value, strict=strict)

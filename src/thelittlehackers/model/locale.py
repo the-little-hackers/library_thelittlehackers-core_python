@@ -236,8 +236,8 @@ class Locale:
         :return: A locale or `None` if the argument `locale` is undefined.
 
 
-        :raise ValueError: If the input is ``None`` or if ``locale`` does not
-            represent a valid locale.
+        :raise MalformedLocaleException: If ``locale`` does not represent a
+            valid locale.
         """
         if not locale:
             return None
@@ -340,8 +340,10 @@ class Locale:
             second code a ISO 3166-1 alpha-2 code.
 
 
-        :raise ValueError: If the input is ``None`` or if ``locale`` does not
-            represent a valid locale.
+        :raise ValueError: If the input is ``None``.
+
+        :raise MalformedLocaleException: If ``locale`` does not represent a
+            valid locale.
         """
         if locale is None:
             raise ValueError("Undefined value 'locale'")
