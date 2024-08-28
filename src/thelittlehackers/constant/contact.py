@@ -24,7 +24,7 @@
 from enum import Enum
 
 
-class ContactName(Enum):
+class ContactName(str, Enum):
     EMAIL = 'EMAIL'
     PHONE = 'PHONE'
     WEBSITE = 'WEBSITE'

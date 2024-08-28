@@ -25,7 +25,7 @@ import logging
 from enum import Enum
 
 
-class LoggingLevelLiteral(Enum):
+class LoggingLevelLiteral(str, Enum):
     CRITICAL = 'critical'
     ERROR = 'error'
     WARNING = 'warning'

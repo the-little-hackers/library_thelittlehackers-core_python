@@ -24,7 +24,7 @@
 from enum import Enum
 
 
-class Visibility(Enum):
+class Visibility(str, Enum):
     # The resource is restricted to a specific individual or a select
     # group of individuals.  Only the owner or the people explicitly
     # granted access can view, access, or interact with the resource.

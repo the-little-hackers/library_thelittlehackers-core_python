@@ -24,7 +24,7 @@
 from enum import Enum
 
 
-class EntityStatus(Enum):
+class EntityStatus(str, Enum):
     """
     Enumeration of standard statuses for a persistent object stored in a
     primary storage system. These statuses are used to reference and
