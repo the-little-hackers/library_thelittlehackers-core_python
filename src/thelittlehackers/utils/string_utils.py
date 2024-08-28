@@ -160,6 +160,42 @@ def string_to_locale(
             raise exception
 
 
+def string_to_timestamp(
+        value: str | datetime | None,
+        strict: bool = True
+) -> datetime | None:
+    """
+    Convert a string representation of a date/time value to its
+    corresponding date/time.
+
+
+    :param value: The input to be converted into a date/time.
+
+    :param strict: A boolean flag indicating whether to enforce strict
+        validation.  If ``True``, a ``ValueError`` is raised for invalid
+        date/time strings.  If ``False``, the function returns ``None``
+        for invalid date/time strings.
+
+
+    :return: The date/time value corresponding to the string.
+
+
+    :raise OverflowError: Raised if the parsed date exceeds the largest
+        valid C integer on your system.
+
+    :raise ValueError: If ``strict`` is ```True``` and ``value`` does not
+        represent a valid date/time or the string format is unknown.
+    """
+    try:
+        if not any_utils.is_empty_or_none(value):
+            return value if isinstance(value, datetime) \
+                else dateutil.parser.parse(value).date()
+    except ValueError as error:
+        if strict:
+            raise error
+
+    return None
+
 def string_to_uuid(
         value: str | UUID | None,
         strict: bool = True
