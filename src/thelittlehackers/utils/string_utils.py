@@ -189,7 +189,7 @@ def string_to_timestamp(
     try:
         if not any_utils.is_empty_or_none(value):
             return value if isinstance(value, datetime) \
-                else dateutil.parser.parse(value).date()
+                else dateutil.parser.parse(value).timestamp()
     except ValueError as error:
         if strict:
             raise error
