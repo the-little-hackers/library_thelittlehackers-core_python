@@ -48,7 +48,7 @@ REGEX_PATTERN_INTEGER = r'\d+'
 
 # Regular expression that matches an Internet Protocol version 4 (32-bit
 # number).
-REGEX_PATTERN_IPV4 = r'(\d{1,3}).(\d{1,3}).(\d{1,3}).(\d{1,3})'
+REGEX_PATTERN_IPV4 = r'^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$'
 
 # Regular expression that matches a Media Access Control (MAC) address.
 #
@@ -57,7 +57,8 @@ REGEX_PATTERN_IPV4 = r'(\d{1,3}).(\d{1,3}).(\d{1,3}).(\d{1,3})'
 #     ```python
 #     r'^%s$' % '[.:-]{0,1}'.join([r'([0-9A-Za-z]{2})' for i in range(6)])
 #     ```
-REGEX_PATTERN_MAC_ADDRESS = r'([0-9A-Za-z]{2})[.:-]{0,1}([0-9A-Za-z]{2})[.:-]{0,1}([0-9A-Za-z]{2})[.:-]{0,1}([0-9A-Za-z]{2})[.:-]{0,1}([0-9A-Za-z]{2})[.:-]{0,1}([0-9A-Za-z]{2})'
+REGEX_PATTERN_MAC_ADDRESS = r'^([0-9A-Fa-f]{2}([-:])?){5}([0-9A-Fa-f]{2})$|^([0-9A-Fa-f]{4}\.){2}([0-9A-Fa-f]{4})$'
+
 
 # Regular expression that matches a natural number including zero.
 REGEX_PATTERN_NATURAL_NUMBER = r'^[0-9]+$'
