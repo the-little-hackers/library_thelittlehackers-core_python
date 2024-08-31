@@ -104,8 +104,8 @@ def get_project_root_path(
     :raise ValueError: If the module name doesn't refer to a Python
         package but to a not packaged script (i.e., ``__main__``).
     """
-    # if module_name == '__main__':
-    #     raise ValueError("A Python packaged module is required")
+    if module_name == '__main__':
+        raise ValueError("A Python packaged module is required")
 
     if source_depth < 0:
         raise ValueError("The source depth must be a positive integer")
