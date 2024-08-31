@@ -28,6 +28,7 @@ from datetime import date
 from datetime import datetime
 from uuid import UUID
 
+from thelittlehackers.constant.data_type import DataType
 from thelittlehackers.model.locale import Locale
 from thelittlehackers.utils import any_utils
 from thelittlehackers.utils.any_utils import is_empty_or_none
@@ -120,6 +121,39 @@ def string_to_date(
         if not any_utils.is_empty_or_none(value):
             return value if isinstance(value, date) \
                 else dateutil.parser.parse(value).date()
+    except ValueError as error:
+        if strict:
+            raise error
+
+    return None
+
+
+def string_to_integer(
+        value: str | int | None,
+        strict: bool = True
+) -> int | None:
+    """
+    Convert a string representation of an integer value to its
+    corresponding integer.
+
+
+    :param value: The input to be converted into an integer.
+
+    :param strict: A boolean flag indicating whether to enforce strict
+        validation.  If ``True``, a ``ValueError`` is raised for invalid
+        integer strings.  If ``False``, the function returns ``None`` for
+        invalid integer strings.
+
+
+    :return: The integer value corresponding to the string.
+
+
+    :raise ValueError: If ``strict`` is ```True``` and ``value`` does not
+        represent a valid integer.
+    """
+    try:
+        if not any_utils.is_empty_or_none(value):
+            return value if isinstance(value, int) else int(value)
     except ValueError as error:
         if strict:
             raise error
@@ -235,3 +269,22 @@ def string_to_uuid(
             raise error
 
     return None
+
+
+DATA_TYPE_CONVERTERS = {
+    DataType.BOOLEAN: string_to_boolean(),
+    DataType.DATE: string_to_date(),
+    DataType.DECIMAL: __convert_to_decimal,
+    DataType.EMAIL_ADDRESS: __convert_to_email_address,
+    DataType.ENUMERATION: __convert_to_enumeration,
+    DataType.INTEGER: string_to_integer,
+    DataType.IPV4: __convert_to_ipv4,
+    DataType.LIST: __convert_to_list,
+    DataType.LOCALE: string_to_locale,
+    DataType.MAC_ADDRESS: __convert_to_macaddr,
+    DataType.STRING: __convert_to_string,
+    DataType.TIME: __convert_to_time,
+    DataType.TIMESTAMP: string_to_timestamp(),
+    DataType.UUID: string_to_uuid(),
+    DataType.VERSION: __convert_to_version,
+}
