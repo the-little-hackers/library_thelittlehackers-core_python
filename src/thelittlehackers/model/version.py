@@ -91,7 +91,12 @@ class Version:
         )
         return result > 0
 
-    def __init__(self, value: int | str | tuple, *args):
+    def __init__(
+            self,
+            value: int | str | tuple,
+            *args,
+            strict: bool = True
+    ):
         """
         Build a ``Version`` instance providing the version of a software
         component as either:
@@ -127,9 +132,12 @@ class Version:
         :param args: 1 or 2 integers for respectively the `minor`, and `patch`
             component numbers of the version, when the argument `value` passed
             to this function is an integer (the `major` component number).
+
+        :param strict: Indicate whether the string ``s`` needs to strictly
+            comply with Semantic Version 2.
         """
         if isinstance(value, str):
-            self.__major, self.__minor, self.__patch, self.__prerelease, self.__build_metadata = self.__convert_string_to_version_component_numbers(value)
+            self.__major, self.__minor, self.__patch, self.__prerelease, self.__build_metadata = self.__convert_string_to_version_component_numbers(value, strict=strict)
         elif isinstance(value, tuple):
             self.__major, self.__minor, self.__patch = value + (0,) * (3 - len(value))
             self.__prerelease = self.__build_metadata = None
@@ -139,7 +147,7 @@ class Version:
             self.__major, self.__minor, self.__patch = (value,) + minor_patch
             self.__prerelease = self.__build_metadata = None
         else:
-            raise ValueError(f"Invalid value '{value}'")
+            raise ValueError(f"Invalid value \"{value}\"")
 
     def __le__(self, other: Version) -> bool:
         return self.__eq__(other) or self.__lt__(other)
@@ -214,7 +222,7 @@ class Version:
     @classmethod
     def __convert_string_to_version_component_numbers(
             cls,
-            s: str,
+            value: str,
             strict: bool = True
     ) -> tuple[int, int, int, str, str]:
         """
@@ -225,7 +233,7 @@ class Version:
         `patch` equal to `0`.
 
 
-        :param s: A string representation of a semantic version 1- or
+        :param value: A string representation of a semantic version 1- or
             3-component number.
 
         :param strict: Indicate whether the string ``s`` needs to strictly
@@ -238,13 +246,13 @@ class Version:
         :raise ValueError: If the string ``s`` doesn't comply with Semantic
             Versioning while the argument ``strict`` is ``true``.
         """
-        if not isinstance(s, str):
-            raise ValueError(f"The argument 's' is of the wrong type '{type(s)}'")
+        if not isinstance(value, str):
+            raise ValueError(f"The argument 's' is of the wrong type '{type(value)}'")
 
-        if s is None and strict:
+        if value is None and strict:
             raise ValueError(f"The argument 's' MUST NOT be null")
 
-        match = re.match(cls.REGEX_PATTERN_SEMANTIC_VERSION, s.strip())
+        match = re.match(cls.REGEX_PATTERN_SEMANTIC_VERSION, value.strip())
         if match:
             major = match.group('major')
             minor = match.group('minor')
@@ -254,7 +262,7 @@ class Version:
 
             return int(major), int(minor or 0), int(patch or 0), prerelease, build_metadata
         elif strict:
-            raise ValueError(f"The argument 's' doesn't comply with Semantic Versioning")
+            raise ValueError(f"The value \"{value}\" doesn't comply with Semantic Versioning")
 
     @classmethod
     def from_file(cls, path: str, file_name: str = None) -> Version:
