@@ -42,7 +42,5 @@ LOGGING_LEVELS = {
 }
 
 
-LOGGING_LEVEL_LITERAL_STRINGS = [
-    str(logging_level_literal)
-    for logging_level_literal in LOGGING_LEVELS.keys()
-]
+# noinspection PyUnresolvedReferences
+LOGGING_LEVEL_LITERAL_STRINGS: list[str] = [level.value for level in LoggingLevelLiteral]
