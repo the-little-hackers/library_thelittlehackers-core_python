@@ -195,6 +195,48 @@ def string_to_decimal(
     return decimal
 
 
+def string_to_email_address(
+        value: str | None,
+        strict: bool = True
+) -> str:
+    """
+    Convert a string to a normalized email address.
+
+    This function attempts to convert the provided string into a valid,
+    normalized email address (lowercased and stripped of surrounding
+    whitespace).
+
+    If the string is ``None``, empty, or not a valid email address, the
+    function returns ``None`` unless ``strict`` mode is enabled.
+
+    When ``strict`` is set to ``True``, the function raises a ``ValueError``
+    if the input string is not a valid email address.
+
+
+    :param value: The string to be converted to an email address.
+
+    :param strict: A boolean flag that, if set to ``True``, raises a
+        ``ValueError``.  If the string does not represent a valid email
+        address.  Defaults to `True`.
+
+
+    :return: The normalized email address as a string, or ``None`` if the
+        input is invalid and ``strict`` is set to ``False``.
+
+
+    :raises ValueError: If ``strict`` is ``True`` and the input string is
+        not a valid email address.
+    """
+    email_address = None if is_empty_or_none(value) or not is_valid_email_address(value) \
+        else value.strip().lower()
+
+    if email_address is None and strict:
+        raise ValueError(
+            f"The string \"{value}\" does not represent an email address"
+        )
+
+    return email_address
+
 def string_to_enumeration_member(
         value: str | Enum | None,
         enumeration: Type[Enum],
