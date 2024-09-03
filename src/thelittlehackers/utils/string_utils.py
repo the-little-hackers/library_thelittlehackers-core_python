@@ -38,10 +38,28 @@ from thelittlehackers.constant.data_type import DataType
 from thelittlehackers.model.locale import Locale
 from thelittlehackers.model.version import Version
 from thelittlehackers.utils import any_utils
+from thelittlehackers.utils.any_utils import is_empty_or_none
 
-
+REGEX_EMAIL_ADDRESS: re.Pattern[[AnyStr]] = re.compile(regex.REGEX_PATTERN_EMAIL_ADDRESS)
 REGEX_IPV4: re.Pattern[AnyStr] = re.compile(regex.REGEX_PATTERN_IPV4)
 REGEX_MAC_ADDRESS: re.Pattern[AnyStr] = re.compile(regex.REGEX_PATTERN_MAC_ADDRESS)
+
+
+def is_valid_email_address(value: str | None) -> bool:
+    """
+    Check if the provided string is a valid email address.
+
+
+    :param value: A string to be checked as an email address.
+
+
+    :return: ``True`` if the string is a valid email address, ``False``
+        otherwise.
+    """
+    if is_empty_or_none(value):
+        return False
+
+    return REGEX_EMAIL_ADDRESS.match(value.strip().lower()) is not None
 
 
 def string_to_boolean(
