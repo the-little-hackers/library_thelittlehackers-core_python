@@ -26,6 +26,9 @@ from __future__ import annotations
 import io
 import os
 import re
+from os import PathLike
+
+import toml
 from functools import reduce
 from itertools import starmap
 
@@ -73,6 +76,7 @@ class Version:
     # denoted using a standard tuple of integers ``major.minor.patch``.
     # REGEX_VERSION = re.compile(r'^(\d+)(.(\d+)(.(\d+)){0,1}){0,1}$')
     REGEX_PATTERN_SEMANTIC_VERSION = r'^(?P<major>0|[1-9]\d*)\.(?P<minor>0|[1-9]\d*)\.(?P<patch>0|[1-9]\d*)(?:-(?P<prerelease>(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+(?P<buildmetadata>[0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$'
+
 
     def __eq__(self, other: Version) -> int:
         result = self.compare_versions(
@@ -283,6 +287,46 @@ class Version:
             version = Version(fd.read())
 
         return version
+
+    @staticmethod
+    def from_pyproject(
+            project_root_path: PathLike,
+            strict: bool = True
+    ) -> Version | None:
+        """
+        Retrieve the version of the project from the ``pyproject.toml`` file.
+
+        This method opens the 'pyproject.toml' file  and extract the version
+        specified under the ``[tool.poetry.version]`` key.  If successful, it
+        returns a ``Version`` object initialized with the version string.
+
+
+        :param project_root_path: The root path of the Python project.
+
+        :param strict: If ``True``, the method raises an exception if the
+            version information is unavailable or cannot be parsed.
+
+
+        :return: A ``Version`` instance representing the version of the
+            project, or `None` if the version information is unavailable or
+            cannot be parsed and ``strict`` is set to ``False``.
+
+
+        :raise FileNotFoundError: If the ``pyproject.toml`` file is not found
+            and ``strict`` is ``True``.
+
+        :raise KeyError: If the ``version`` key is missing in the
+            ``pyproject.toml`` file and ``strict`` is ``True``.
+        """
+        try:
+            with open(os.path.join(project_root_path, 'pyproject.toml'), 'rt') as fd:
+                pyproject_data = toml.load(fd)
+            return Version(pyproject_data['tool']['poetry']['version'])
+        except (FileNotFoundError, KeyError) as exception:
+            if strict:
+                raise exception
+
+        return None
 
     @staticmethod
     def from_string(s: str) -> Version | None:
