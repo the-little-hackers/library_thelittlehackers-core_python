@@ -25,6 +25,19 @@ from enum import Enum
 
 
 class Visibility(str, Enum):
+    """
+    Enumeration representing the visibility levels for a resource.
+
+    This class defines the various access control levels that can be
+    assigned to resources, specifying who can view, access, or interact
+    with the resource.
+    """
+    # The resource is accessible only to family members.
+    FAMILY = 'family'
+
+    # The resource is accessible only to friends.
+    FRIEND = 'friend'
+
     # The resource is restricted to a specific individual or a select
     # group of individuals.  Only the owner or the people explicitly
     # granted access can view, access, or interact with the resource.
