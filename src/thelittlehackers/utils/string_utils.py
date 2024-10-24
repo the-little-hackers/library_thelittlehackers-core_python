@@ -241,7 +241,7 @@ def string_to_email_address(
 
 def string_to_enumeration_member(
         value: str | Enum | None,
-        enumeration: Type[Enum],
+        enumeration: Any, # Type[Enum],
         strict: bool = True,
         default_value: Enum | None = None
 ) -> Enum | None:
@@ -278,7 +278,8 @@ def string_to_enumeration_member(
     if not isinstance(enumeration, Enum):
         raise ValueError(
             "The argument \"enumeration\" must be a subclass of Enum.  Received "
-            f"\"{enumeration.__name__}\" instead ({enumeration.__class__.__name__})."
+            f"\"{enumeration.__name__}\" of \"{enumeration.__class__.__name__}\" "
+            f"instead."
         )
 
     try:
