@@ -21,10 +21,10 @@
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-from enum import Enum
+from enum import StrEnum
 
 
-class Visibility(str, Enum):
+class Visibility(StrEnum):
     """
     Enumeration representing the visibility levels for a resource.
 

@@ -21,10 +21,10 @@
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-from enum import Enum
+from enum import StrEnum
 
 
-class EntityStatus(str, Enum):
+class EntityStatus(StrEnum):
     """
     Enumeration of standard statuses for a persistent object stored in a
     primary storage system. These statuses are used to reference and

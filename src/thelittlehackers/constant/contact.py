@@ -21,10 +21,10 @@
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-from enum import Enum
+from enum import StrEnum
 
 
-class ContactName(str, Enum):
+class ContactName(StrEnum):
     EMAIL = 'EMAIL'
     PHONE = 'PHONE'
     WEBSITE = 'WEBSITE'
