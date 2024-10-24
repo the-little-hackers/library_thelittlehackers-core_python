@@ -28,6 +28,7 @@ import dateutil.parser
 import re
 import string
 from enum import Enum
+from typing import Any
 from typing import AnyStr
 from typing import Callable
 from typing import Type
@@ -236,6 +237,7 @@ def string_to_email_address(
         )
 
     return email_address
+
 
 def string_to_enumeration_member(
         value: str | Enum | None,
@@ -502,6 +504,22 @@ def string_to_locale(
     return locale
 
 
+def string_to_string(
+        value: str | None
+) -> str | None:
+    """
+    Return the input string if it is not empty or ``None``.
+
+
+    :param value: A string.
+
+
+    :return: The input string if it is non-empty and not ``None``;
+        otherwise, ``None``.
+    """
+    return None if any_utils.is_empty_or_none(value) else value
+
+
 def string_to_time(
         value: str | datetime.time | None,
         strict: bool = True
@@ -687,7 +705,7 @@ DATA_TYPE_CONVERTERS: {DataType, Callable} = {
     # DataType.LIST: __convert_to_list,
     DataType.LOCALE: string_to_locale,
     DataType.MAC_ADDRESS: string_to_mac_address,
-    DataType.STRING: lambda v: v,
+    DataType.STRING: string_to_string,
     DataType.TIME: string_to_time,
     DataType.TIMESTAMP: string_to_timestamp,
     DataType.UUID: string_to_uuid,
