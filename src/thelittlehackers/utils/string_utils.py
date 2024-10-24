@@ -687,7 +687,7 @@ DATA_TYPE_CONVERTERS: {DataType, Callable} = {
     # DataType.LIST: __convert_to_list,
     DataType.LOCALE: string_to_locale,
     DataType.MAC_ADDRESS: string_to_mac_address,
-    # DataType.STRING: __convert_to_string,
+    DataType.STRING: lambda v: v,
     DataType.TIME: string_to_time,
     DataType.TIMESTAMP: string_to_timestamp,
     DataType.UUID: string_to_uuid,
