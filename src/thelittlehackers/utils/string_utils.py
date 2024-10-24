@@ -241,7 +241,7 @@ def string_to_email_address(
 
 def string_to_enumeration_member(
         value: str | Enum | None,
-        enumeration: Any, # Type[Enum],
+        enumeration: Type[Enum],
         strict: bool = True,
         default_value: Enum | None = None
 ) -> Enum | None:
@@ -275,7 +275,7 @@ def string_to_enumeration_member(
     :raise ValueError: If ``value`` is a string that does not match any
         member of ``enumeration`` and ``strict`` is ``True``.
     """
-    if not isinstance(enumeration, Enum):
+    if not issubclass(enumeration, Enum):
         raise ValueError(
             "The argument \"enumeration\" must be a subclass of Enum.  Received "
             f"\"{enumeration.__name__}\" of \"{enumeration.__class__.__name__}\" "
