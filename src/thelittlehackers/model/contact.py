@@ -326,9 +326,13 @@ class Contact(BaseModel):
         :param value: A string representation of the value associated to a
             contact information.
 
-        :param info: A dictionary of the field values, used to access
-            the ``property_name`` field.
+        :param info: An instance of `ValidationInfo` providing context during
+            validation. This includes:
 
+            - ``data``: A dictionary containing the values of the fields being
+              validated in the model.  It allows access to other fields, such
+              as ``property_name``, to perform cross-field validations.
+             - Additional validation context and metadata.
 
         :return: The validated lowercase value.
 
