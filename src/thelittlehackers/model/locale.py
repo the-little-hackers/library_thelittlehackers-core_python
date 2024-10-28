@@ -24,6 +24,10 @@
 from __future__ import annotations
 
 import re
+from typing import Optional
+
+from pydantic import BaseModel
+from pydantic import Field
 
 from thelittlehackers.constant.locale import ISO_3166_1_ALPHA_2_CODES
 from thelittlehackers.constant.locale import ISO_639_1_CODES
@@ -42,7 +46,7 @@ REGEX_JAVA_LOCALE = re.compile(REGEX_PATTERN_JAVA_LOCALE)
 REGEX_PERMISSIVE_LOCALE = re.compile(REGEX_PATTERN_PERMISSIVE_LOCALE)
 
 
-class Locale:
+class Locale(BaseModel):
     """
     Represent a locale that corresponds to a tag respecting RFC 4646.
 
@@ -60,8 +64,8 @@ class Locale:
     Conceptually, a locale identifies a specific user community—a group of
     users who have similar cultural and linguistic expectations for human-
     computer interaction (and the kinds of data they process). A locale’s
-    identifier is a label for a given set of settings.  For example, "en”
-    (representing "English”) is an identifier for a linguistic (and to
+    identifier is a label for a given set of settings.  For example, `en`
+    (representing "English") is an identifier for a linguistic (and to
     some extent cultural) locale that includes (among others) Australia,
     Great Britain, and the United States.  There are also specific
     regional locales for Australian English, British English, U.S.
@@ -79,12 +83,12 @@ class Locale:
     which provides default values for all settings. Below the root
     hierarchy are language locales.  These encapsulate settings for
     language groups, such as English, German and Chinese (using
-    identifiers "en”, "de”, and "zh”).  Normal locales specify a language
-    in a particular region (for example "en-GB”, "de-AT”, and "zh-SG”).
+    identifiers `en`, `de`, and `zh`).  Normal locales specify a language
+    in a particular region (for example `en-GB`, `de-AT`, and `zh-SG`).
 
     A locale is expressed by a ISO 639-3 alpha-3 code element, optionally
     followed by a dash character `-` and a ISO 3166-1 alpha-2 code.  For
-    example: "eng" (which denotes a standard English), "eng-US" (which
+    example: `eng` (which denotes a standard English), `eng-US` (which
     denotes an American English).
     """
     class MalformedLocaleException(Exception):
@@ -102,6 +106,15 @@ class Locale:
         """
         Indicate that a string doesn't match a valid language code.
         """
+
+    country_code: Optional[str] = Field(
+        ...,
+        description="An ISO 3166-1 alpha-2 code."
+    )
+    language_code: str = Field(
+        ...,
+        description="An ISO 639-3 alpha-3 code."
+    )
 
     @classmethod
     def assert_country_code(cls, code: str, strict: bool = True) -> None:
@@ -173,35 +186,35 @@ class Locale:
 
         return self.__hash
 
-    def __init__(
-            self,
-            language_code: str,
-            country_code: str = None,
-            strict: bool = True):
-        """
-        Build a locale providing a ISO 639-3 alpha-3 code (or alpha-2 code),
-        and an optional ISO 3166-1 alpha-2 code
-
-
-        :param language_code: A ISO 639-3 alpha-3 code (or alpha-2 code; which
-            will be automatically converted to its equivalent ISO 639-3
-            alpha-3 code).
-
-        :param country_code: A ISO 3166-1 alpha-2 code.
-
-
-        :raise InvalidCountryCodeException: If the argument `country_code`
-            doesn't match a valid country_code code.
-
-        :raise InvalidLanguageCodeException: If the argument `language_code`
-            doesn't match a valid language code.
-        """
-        self.assert_language_code(language_code, strict=strict)
-        if country_code:
-            self.assert_country_code(country_code, strict=strict)
-
-        self.__language_code = self.__to_iso_639_3(language_code)
-        self.__country_code = country_code
+    # def __init__(
+    #         self,
+    #         language_code: str,
+    #         country_code: str = None,
+    #         strict: bool = True):
+    #     """
+    #     Build a locale providing a ISO 639-3 alpha-3 code (or alpha-2 code),
+    #     and an optional ISO 3166-1 alpha-2 code
+    #
+    #
+    #     :param language_code: A ISO 639-3 alpha-3 code (or alpha-2 code; which
+    #         will be automatically converted to its equivalent ISO 639-3
+    #         alpha-3 code).
+    #
+    #     :param country_code: A ISO 3166-1 alpha-2 code.
+    #
+    #
+    #     :raise InvalidCountryCodeException: If the argument `country_code`
+    #         doesn't match a valid country_code code.
+    #
+    #     :raise InvalidLanguageCodeException: If the argument `language_code`
+    #         doesn't match a valid language code.
+    #     """
+    #     self.assert_language_code(language_code, strict=strict)
+    #     if country_code:
+    #         self.assert_country_code(country_code, strict=strict)
+    #
+    #     self.__language_code = self.__to_iso_639_3(language_code)
+    #     self.__country_code = country_code
 
     def __repr__(self) -> str:
         return self.to_string()
@@ -212,10 +225,6 @@ class Locale:
     @staticmethod
     def __to_iso_639_3(code: str) -> str:
         return code if len(code) == 3 else ISO_639_1_CODES_TO_ISO_639_3_CODES[code]
-
-    @property
-    def country_code(self) -> str:
-        return self.__country_code
 
     @staticmethod
     def from_string(locale: str, strict: bool = True) -> Locale | None:
@@ -243,7 +252,11 @@ class Locale:
             return None
 
         language_code, country_code = Locale.decompose_locale(locale, strict)
-        return Locale(language_code, country_code, strict=strict)
+
+        return Locale(
+            language_code=language_code,
+            country_code=country_code
+        )
 
     @classmethod
     def is_country_code(cls, code: str, strict: bool = True) -> bool:
@@ -286,10 +299,6 @@ class Locale:
         """
         return self.language_code == other.language_code
 
-    @property
-    def language_code(self) -> str:
-        return self.__language_code
-    
     def to_http_string(self) -> str:
         """
         Return the string representation of the locale compatible with the
@@ -383,4 +392,4 @@ class Locale:
             else f'{language_code}-{country_code}'
 
 
-DEFAULT_LOCALE = Locale('eng')
+DEFAULT_LOCALE = Locale(language_code='eng')
