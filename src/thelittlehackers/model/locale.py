@@ -47,6 +47,25 @@ REGEX_JAVA_LOCALE = re.compile(REGEX_PATTERN_JAVA_LOCALE)
 REGEX_PERMISSIVE_LOCALE = re.compile(REGEX_PATTERN_PERMISSIVE_LOCALE)
 
 
+class MalformedLocaleException(ValueError):
+    """
+    Indicate that a string doesn't comply with the valid expression of a
+    locale.
+    """
+
+
+class InvalidCountryCodeException(ValueError):
+    """
+    Indicate that a string doesn't match a valid country code.
+    """
+
+
+class InvalidLanguageCodeException(ValueError):
+    """
+    Indicate that a string doesn't match a valid language code.
+    """
+
+
 class Locale(BaseModel):
     """
     Represent a locale that corresponds to a tag respecting RFC 4646.
@@ -92,26 +111,11 @@ class Locale(BaseModel):
     example: `eng` (which denotes a standard English), `eng-US` (which
     denotes an American English).
     """
-    class MalformedLocaleException(Exception):
-        """
-        Indicate that a string doesn't comply with the valid expression of a
-        locale.
-        """
-
-    class InvalidCountryCodeException(Exception):
-        """
-        Indicate that a string doesn't match a valid country code.
-        """
-
-    class InvalidLanguageCodeException(Exception):
-        """
-        Indicate that a string doesn't match a valid language code.
-        """
-
     country_code: Optional[str] = Field(
         ...,
         description="An ISO 3166-1 alpha-2 code."
     )
+
     language_code: str = Field(
         ...,
         description="An ISO 639-3 alpha-3 code."
@@ -133,7 +137,7 @@ class Locale(BaseModel):
             function doesn't match a valid language code.
         """
         if not cls.is_country_code(code, strict=strict):
-            raise cls.InvalidCountryCodeException(f'Invalid country code "{code}"')
+            raise InvalidCountryCodeException(f'Invalid country code "{code}"')
 
     @classmethod
     def assert_language_code(cls, code: str, strict: bool = True) -> None:
@@ -151,7 +155,7 @@ class Locale(BaseModel):
             this function doesn't match a valid language code.
         """
         if not cls.is_language_code(code, strict=strict):
-            raise cls.InvalidLanguageCodeException(f'Invalid language code "{code}"')
+            raise InvalidLanguageCodeException(f'Invalid language code "{code}"')
 
     def __eq__(self, other: object) -> bool:
         """
@@ -186,36 +190,6 @@ class Locale(BaseModel):
             ])
 
         return self.__hash
-
-    # def __init__(
-    #         self,
-    #         language_code: str,
-    #         country_code: str = None,
-    #         strict: bool = True):
-    #     """
-    #     Build a locale providing a ISO 639-3 alpha-3 code (or alpha-2 code),
-    #     and an optional ISO 3166-1 alpha-2 code
-    #
-    #
-    #     :param language_code: A ISO 639-3 alpha-3 code (or alpha-2 code; which
-    #         will be automatically converted to its equivalent ISO 639-3
-    #         alpha-3 code).
-    #
-    #     :param country_code: A ISO 3166-1 alpha-2 code.
-    #
-    #
-    #     :raise InvalidCountryCodeException: If the argument `country_code`
-    #         doesn't match a valid country_code code.
-    #
-    #     :raise InvalidLanguageCodeException: If the argument `language_code`
-    #         doesn't match a valid language code.
-    #     """
-    #     self.assert_language_code(language_code, strict=strict)
-    #     if country_code:
-    #         self.assert_country_code(country_code, strict=strict)
-    #
-    #     self.__language_code = self.__to_iso_639_3(language_code)
-    #     self.__country_code = country_code
 
     def __repr__(self) -> str:
         return self.to_string()
@@ -278,13 +252,15 @@ class Locale(BaseModel):
         match = REGEX_LOCALE.match(locale)
         if match is None:
             if strict:
-                raise Locale.MalformedLocaleException(
-                    f"The string \"{locale}\" doesn't represent a valid locale")
+                raise MalformedLocaleException(
+                    f"The string \"{locale}\" doesn't represent a valid locale"
+                )
 
             match = REGEX_PERMISSIVE_LOCALE.match(locale)
             if match is None:
-                raise Locale.MalformedLocaleException(
-                    f"The string \"{locale}\" doesn't represent any forms of a valid locale")
+                raise MalformedLocaleException(
+                    f"The string \"{locale}\" doesn't represent any forms of a valid locale"
+                )
 
         _, locale_language_code, locale_country_code, language_code = match.groups()
 
@@ -310,8 +286,7 @@ class Locale(BaseModel):
         :return: A locale or `None` if the argument `locale` is undefined.
 
 
-        :raise MalformedLocaleException: If ``locale`` does not represent a
-            valid locale.
+        :raise ValueError: If ``locale`` does not represent a valid locale.
         """
         if not locale:
             return None
@@ -395,6 +370,19 @@ class Locale(BaseModel):
     @field_validator('country_code', mode='before')
     @classmethod
     def validate_country_code(cls, value: str | None) -> str | None:
+        """
+        Validate the given country code as a valid ISO 3166-1 alpha-2 code.
+
+
+        :param value: An ISO 3166-1 alpha-2 country code (e.g., 'US' for the
+            United States) or `None`.
+
+
+        :return: An ISO 3166-1 alpha-2 code or `None`.
+
+
+        :raise ValueError: If the given country code not `None` and is invalid.
+        """
         if string_utils.is_empty_or_none(value):
             return None
 
@@ -404,11 +392,25 @@ class Locale(BaseModel):
     @field_validator('language_code', mode='before')
     @classmethod
     def validate_language_code(cls, value: str | None) -> str:
+        """
+        Validate and convert a given language code to a standard ISO 639-3
+        alpha-3 code.
+
+
+        :param value: An ISO 639-3 alpha-3 code (e.g., 'eng' for English) or
+            an ISO 639-1 alpha-2 code (e.g., 'en' for English), which will be
+            converted to its equivalent ISO 639-3 code.
+
+
+        :return: A valid ISO 639-3 alpha-3 code.
+
+
+        :raise ValueError: If the given language code is invalid.
+        """
         if string_utils.is_empty_or_none(value):
-            raise ValueError("Expecting a string")
+            raise ValueError("Expecting a non-empty string for language code.")
 
         cls.assert_language_code(value, strict=True)
-
         return cls.__to_iso_639_3(value)
 
 
