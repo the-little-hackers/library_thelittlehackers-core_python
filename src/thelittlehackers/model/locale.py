@@ -28,12 +28,13 @@ from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import Field
+from pydantic import field_validator
 
 from thelittlehackers.constant.locale import ISO_3166_1_ALPHA_2_CODES
 from thelittlehackers.constant.locale import ISO_639_1_CODES
 from thelittlehackers.constant.locale import ISO_639_1_CODES_TO_ISO_639_3_CODES
 from thelittlehackers.constant.locale import ISO_639_3_CODES
-
+from thelittlehackers.utils import string_utils
 
 REGEX_PATTERN_LANGUAGE_CODE = r'[a-z]{2,3}'
 REGEX_PATTERN_COUNTRY_CODE = r'[A-Z]{2}'
@@ -227,6 +228,70 @@ class Locale(BaseModel):
         return code if len(code) == 3 else ISO_639_1_CODES_TO_ISO_639_3_CODES[code]
 
     @staticmethod
+    def compose_locale(language_code: str, country_code: str = None) -> str:
+        """
+        Return the string representation of the locale specified with a ISO
+        639-3 alpha-3 code (or alpha-2 code), optionally followed by a dash
+        character `-` and a ISO 3166-1 alpha-2 code
+
+
+        :param language_code: A ISO 639-3 alpha-3 code (or alpha-2 code).
+
+        :param country_code: A ISO 3166-1 alpha-2 code.
+
+
+        :return: A string representing a locale.
+        """
+        return language_code if country_code is None \
+            else f'{language_code}-{country_code}'
+
+    @staticmethod
+    def decompose_locale(locale: str, strict: bool = True) -> tuple[str, str | None]:
+        """
+        Return the decomposition of the specified locale into a language
+        and a country codes
+
+
+        :param locale: A ISO 639-3 alpha-3 code (or alpha-2 code), optionally
+            followed by a dash character `-` and a ISO 3166-1 alpha-2 code.
+            If `None` passed, the function returns the default locale, i.e.,
+            standard English `('eng', None)`.
+
+        :param strict: Indicate whether the string representation of a locale
+            has to be strictly compliant with RFC 4646, or whether a Java
+            style locale (character `_` instead of `-`) is accepted.
+
+
+        :return: A tuple `(language_code, country_code)`, where the first code
+            represents a ISO 639-3 alpha-3 code (or alpha-2 code), and the
+            second code a ISO 3166-1 alpha-2 code.
+
+
+        :raise ValueError: If the input is ``None``.
+
+        :raise MalformedLocaleException: If ``locale`` does not represent a
+            valid locale.
+        """
+        if locale is None:
+            raise ValueError("Undefined value 'locale'")
+
+        match = REGEX_LOCALE.match(locale)
+        if match is None:
+            if strict:
+                raise Locale.MalformedLocaleException(
+                    f"The string \"{locale}\" doesn't represent a valid locale")
+
+            match = REGEX_PERMISSIVE_LOCALE.match(locale)
+            if match is None:
+                raise Locale.MalformedLocaleException(
+                    f"The string \"{locale}\" doesn't represent any forms of a valid locale")
+
+        _, locale_language_code, locale_country_code, language_code = match.groups()
+
+        return (locale_language_code, locale_country_code.upper()) if language_code is None \
+            else (language_code, None)
+
+    @staticmethod
     def from_string(locale: str, strict: bool = True) -> Locale | None:
         """
         Return an object `Locale` corresponding to the string representation
@@ -327,69 +392,24 @@ class Locale(BaseModel):
         """
         return Locale.compose_locale(self.language_code, self.__country_code)
 
-    @staticmethod
-    def decompose_locale(locale: str, strict: bool = True) -> tuple[str, str | None]:
-        """
-        Return the decomposition of the specified locale into a language
-        and a country codes
+    @field_validator('country_code', mode='before')
+    @classmethod
+    def validate_country_code(cls, value: str | None) -> str:
+        if string_utils.is_empty_or_none(value):
+            raise ValueError("Expecting a string")
 
+        cls.assert_language_code(value, strict=True)
 
-        :param locale: A ISO 639-3 alpha-3 code (or alpha-2 code), optionally
-            followed by a dash character `-` and a ISO 3166-1 alpha-2 code.
-            If `None` passed, the function returns the default locale, i.e.,
-            standard English `('eng', None)`.
+        return cls.__to_iso_639_3(value)
 
-        :param strict: Indicate whether the string representation of a locale
-            has to be strictly compliant with RFC 4646, or whether a Java
-            style locale (character `_` instead of `-`) is accepted.
+    @field_validator('language_code', mode='before')
+    @classmethod
+    def validate_language_code(cls, value: str | None) -> str | None:
+        if string_utils.is_empty_or_none(value):
+            return None
 
-
-        :return: A tuple `(language_code, country_code)`, where the first code
-            represents a ISO 639-3 alpha-3 code (or alpha-2 code), and the
-            second code a ISO 3166-1 alpha-2 code.
-
-
-        :raise ValueError: If the input is ``None``.
-
-        :raise MalformedLocaleException: If ``locale`` does not represent a
-            valid locale.
-        """
-        if locale is None:
-            raise ValueError("Undefined value 'locale'")
-
-        match = REGEX_LOCALE.match(locale)
-        if match is None:
-            if strict:
-                raise Locale.MalformedLocaleException(
-                    f"The string \"{locale}\" doesn't represent a valid locale")
-
-            match = REGEX_PERMISSIVE_LOCALE.match(locale)
-            if match is None:
-                raise Locale.MalformedLocaleException(
-                    f"The string \"{locale}\" doesn't represent any forms of a valid locale")
-
-        _, locale_language_code, locale_country_code, language_code = match.groups()
-
-        return (locale_language_code, locale_country_code.upper()) if language_code is None \
-            else (language_code, None)
-
-    @staticmethod
-    def compose_locale(language_code: str, country_code: str = None) -> str:
-        """
-        Return the string representation of the locale specified with a ISO
-        639-3 alpha-3 code (or alpha-2 code), optionally followed by a dash
-        character `-` and a ISO 3166-1 alpha-2 code
-
-
-        :param language_code: A ISO 639-3 alpha-3 code (or alpha-2 code).
-
-        :param country_code: A ISO 3166-1 alpha-2 code.
-
-
-        :return: A string representing a locale.
-        """
-        return language_code if country_code is None \
-            else f'{language_code}-{country_code}'
-
+        cls.assert_country_code(value, strict=True)
+        return value
+    
 
 DEFAULT_LOCALE = Locale(language_code='eng')
