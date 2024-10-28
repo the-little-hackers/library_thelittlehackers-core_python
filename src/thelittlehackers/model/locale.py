@@ -29,6 +29,7 @@ from typing import Optional
 from pydantic import BaseModel
 from pydantic import Field
 from pydantic import field_validator
+from pydantic import model_serializer
 
 from thelittlehackers.constant.locale import ISO_3166_1_ALPHA_2_CODES
 from thelittlehackers.constant.locale import ISO_639_1_CODES
@@ -341,7 +342,8 @@ class Locale(BaseModel):
         """
         return self.language_code == other.language_code
 
-    def model_dump_json(self, *args, **kwargs) -> str:
+    @model_serializer()
+    def serialize_model(self) -> str:
         """
         Customize JSON serialization to return a string representation of the
         locale.
