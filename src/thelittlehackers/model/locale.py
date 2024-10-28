@@ -341,6 +341,18 @@ class Locale(BaseModel):
         """
         return self.language_code == other.language_code
 
+    def model_dump_json(self, *args, **kwargs) -> str:
+        """
+        Customize JSON serialization to return a string representation of the
+        locale.
+
+
+        :return: A string representation of the locale, i.e., a ISO 639-3
+            alpha-3 code (or alpha-2 code), optionally followed by a dash
+            character `-` and a ISO 3166-1 alpha-2 code.
+        """
+        return self.to_string()
+
     def to_http_string(self) -> str:
         """
         Return the string representation of the locale compatible with the
@@ -351,7 +363,7 @@ class Locale(BaseModel):
         client is able to understand, and which locale variant is preferred.
 
 
-        :return: a string representation of this locale compatible with HTTP
+        :return: A string representation of this locale compatible with HTTP
             request, i.e., a ISO 639-3 alpha-2, optionally followed by a dash
             character `-` and a ISO 3166-1 alpha-2 code.
         """
@@ -363,8 +375,8 @@ class Locale(BaseModel):
         Return a string representation of this object `Locale`.
 
 
-        :return: a string representation of a locale, i.e., a ISO 639-3
-             alpha-3 code (or alpha-2 code), optionally followed by a dash
+        :return: A string representation of the locale, i.e., a ISO 639-3
+            alpha-3 code (or alpha-2 code), optionally followed by a dash
             character `-` and a ISO 3166-1 alpha-2 code.
         """
         return Locale.compose_locale(self.language_code, self.__country_code)
