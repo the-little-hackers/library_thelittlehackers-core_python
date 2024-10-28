@@ -36,9 +36,9 @@ from uuid import UUID
 
 from thelittlehackers.constant import regex
 from thelittlehackers.constant.data_type import DataType
-from thelittlehackers.model.locale import Locale
 from thelittlehackers.model.version import Version
 from thelittlehackers.utils import any_utils
+from thelittlehackers.utils import module_utils
 from thelittlehackers.utils.any_utils import is_empty_or_none
 
 REGEX_EMAIL_ADDRESS: re.Pattern[[AnyStr]] = re.compile(regex.REGEX_PATTERN_EMAIL_ADDRESS)
@@ -712,3 +712,7 @@ DATA_TYPE_CONVERTERS: {DataType, Callable} = {
     DataType.UUID: string_to_uuid,
     DataType.VERSION: string_to_version,
 }
+
+
+# Dynamically load the class `Locale` to avoid circular import.
+Locale = module_utils.load_class('thelittlehackers.model.locale.Locale')

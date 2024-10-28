@@ -212,7 +212,7 @@ def load_class(class_module_package_name):
     of this class in a Python packaged module (module namespace).
 
 
-    @note: The function prevents from circular import.
+    :note: The function prevents from circular import.
 
 
     :param class_module_package_name: A string representation of the class
