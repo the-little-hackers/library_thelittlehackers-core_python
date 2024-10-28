@@ -278,7 +278,7 @@ def string_to_enumeration_member(
     if not issubclass(enumeration, Enum):
         raise ValueError(
             "The argument \"enumeration\" must be a subclass of Enum.  Received "
-            f"\"{enumeration.__name__}\" of \"{enumeration.__class__.__name__}\" "
+            f"\"{enumeration.__name__}\" of class \"{enumeration.__class__.__name__}\" "
             f"instead."
         )
 
