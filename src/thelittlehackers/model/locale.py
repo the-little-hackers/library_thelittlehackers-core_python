@@ -179,12 +179,12 @@ class Locale(BaseModel):
             return False
 
         return self.language_code == other.language_code and \
-            self.__country_code == other.country_code
+            self.country_code == other.country_code
 
     def __hash__(self) -> int:
         if not hasattr(self, '__hash'):
-            encoded_locale = self.language_code if self.__country_code is None \
-                else f'{self.language_code}{self.__country_code}'
+            encoded_locale = self.language_code if self.country_code is None \
+                else f'{self.language_code}{self.country_code}'
 
             self.__hash = sum([
                 (ord(c) - ord('a') if ord(c) >= ord('a')
@@ -369,8 +369,8 @@ class Locale(BaseModel):
             request, i.e., a ISO 639-3 alpha-2, optionally followed by a dash
             character `-` and a ISO 3166-1 alpha-2 code.
         """
-        return self.language_code[:2] if self.__country_code is None \
-            else f'{self.language_code[:2]}-{self.__country_code}'
+        return self.language_code[:2] if self.country_code is None \
+            else f'{self.language_code[:2]}-{self.country_code}'
 
     def to_string(self) -> str:
         """
@@ -381,7 +381,7 @@ class Locale(BaseModel):
             alpha-3 code (or alpha-2 code), optionally followed by a dash
             character `-` and a ISO 3166-1 alpha-2 code.
         """
-        return Locale.compose_locale(self.language_code, self.__country_code)
+        return Locale.compose_locale(self.language_code, self.country_code)
 
     @field_validator('country_code', mode='before')
     @classmethod
