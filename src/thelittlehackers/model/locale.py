@@ -410,6 +410,6 @@ class Locale(BaseModel):
 
         cls.assert_country_code(value, strict=True)
         return value
-    
+
 
 DEFAULT_LOCALE = Locale(language_code='eng')
