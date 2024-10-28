@@ -394,22 +394,22 @@ class Locale(BaseModel):
 
     @field_validator('country_code', mode='before')
     @classmethod
-    def validate_country_code(cls, value: str | None) -> str:
+    def validate_country_code(cls, value: str | None) -> str | None:
+        if string_utils.is_empty_or_none(value):
+            return None
+
+        cls.assert_country_code(value, strict=True)
+        return value
+
+    @field_validator('language_code', mode='before')
+    @classmethod
+    def validate_language_code(cls, value: str | None) -> str:
         if string_utils.is_empty_or_none(value):
             raise ValueError("Expecting a string")
 
         cls.assert_language_code(value, strict=True)
 
         return cls.__to_iso_639_3(value)
-
-    @field_validator('language_code', mode='before')
-    @classmethod
-    def validate_language_code(cls, value: str | None) -> str | None:
-        if string_utils.is_empty_or_none(value):
-            return None
-
-        cls.assert_country_code(value, strict=True)
-        return value
 
 
 DEFAULT_LOCALE = Locale(language_code='eng')
