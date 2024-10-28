@@ -112,13 +112,15 @@ class Locale(BaseModel):
     denotes an American English).
     """
     country_code: Optional[str] = Field(
-        ...,
-        description="An ISO 3166-1 alpha-2 code."
+        None,
+        description="An ISO 3166-1 alpha-2 code.",
+        frozen=True
     )
 
     language_code: str = Field(
         ...,
-        description="An ISO 639-3 alpha-3 code."
+        description="An ISO 639-3 alpha-3 code.",
+        frozen=True
     )
 
     @classmethod
