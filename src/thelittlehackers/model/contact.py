@@ -29,6 +29,7 @@ from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import Field
+from pydantic import ValidationInfo
 from pydantic import field_validator
 
 from thelittlehackers.constant.contact import ContactName
@@ -316,7 +317,7 @@ class Contact(BaseModel):
 
     @field_validator('property_value', mode='before')
     @classmethod
-    def validate_property_value(cls, value: str, values: dict) -> str:
+    def validate_property_value(cls, value: str, info: ValidationInfo) -> str:
         """
         Validate the property value based on the property name, and convert it
         to lowercase.
@@ -325,7 +326,7 @@ class Contact(BaseModel):
         :param value: A string representation of the value associated to a
             contact information.
 
-        :param values: A dictionary of the field values, used to access
+        :param info: A dictionary of the field values, used to access
             the ``property_name`` field.
 
 
@@ -335,7 +336,7 @@ class Contact(BaseModel):
         :raise ValueError: If the property_value does not match the
             expected format for the specified ``property_name`` field.
         """
-        property_name = values.get('property_name')
+        property_name = info.data.get('property_name')
         if property_name is None:
             raise ValueError("`property_name` must be set before validating `property_value`.")
 
