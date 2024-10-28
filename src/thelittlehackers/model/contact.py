@@ -37,6 +37,15 @@ from thelittlehackers.constant.regex import REGEX_PATTERN_EMAIL_ADDRESS
 from thelittlehackers.constant.regex import REGEX_PATTERN_PHONE_NUMBER
 
 
+REGEX_EMAIL_ADDRESS = re.compile(REGEX_PATTERN_EMAIL_ADDRESS)
+REGEX_PHONE_NUMBER = re.compile(REGEX_PATTERN_PHONE_NUMBER)
+
+CONTACT_NAME_REGEX_MAPPING = {
+    ContactName.EMAIL: REGEX_EMAIL_ADDRESS,
+    ContactName.PHONE: REGEX_PHONE_NUMBER,
+}
+
+
 class InvalidContactException(ValueError):
     """
     Indicate the value of a contact doesn't comply with the type of this
@@ -49,23 +58,16 @@ class Contact(BaseModel):
     Represent a contact information, such as an e-mail address, a phone
     numbers, the Uniform Resource Locator (URL) of a website.
     """
-    REGEX_EMAIL_ADDRESS = re.compile(REGEX_PATTERN_EMAIL_ADDRESS)
-    REGEX_PHONE_NUMBER = re.compile(REGEX_PATTERN_PHONE_NUMBER)
-
-    __CONTACT_NAME_REGEX_MAPPING = {
-        ContactName.EMAIL: REGEX_EMAIL_ADDRESS,
-        ContactName.PHONE: REGEX_PHONE_NUMBER,
-    }
 
     is_primary: Optional[bool] = Field(
-        False,
+        None,
         description="Specify whether this contact information is the primary contact for "
                     "this type of contact information.",
         frozen=False
     )
 
     is_verified: Optional[bool] = Field(
-        False,
+        None,
         description="Specify whether this contact information has been verified, i.e., it "
                     "has been grabbed from a trusted Social Networking Service (SNS), or "
                     "through a challenge/response process.",
@@ -150,13 +152,13 @@ class Contact(BaseModel):
         :raise ValueError: If no regular expression mapping is defined for the
             given property name.  Please, contact the developers.
         """
-        regex = cls.__CONTACT_NAME_REGEX_MAPPING.get(property_name)
+        regex = CONTACT_NAME_REGEX_MAPPING.get(property_name)
         if regex is None:
             raise ValueError(
                 f"No regex mapping found for contact type \"{property_name}\""
             )
 
-        if not cls.__CONTACT_NAME_REGEX_MAPPING[property_name].match(property_value):
+        if not CONTACT_NAME_REGEX_MAPPING[property_name].match(property_value):
             raise cls.InvalidContactException(
                 f"Invalid value \"{property_value}\" for contact type \"{property_name}\". "
                 f"Expected format does not match."
@@ -229,52 +231,46 @@ class Contact(BaseModel):
     #         is_verified=is_verified_bool
     #     )
 
-    # @staticmethod
-    # def from_object(obj):
-    #     """
-    #     Convert an object representing a contact information to an instance
-    #     ``Contact``.
-    #
-    #
-    #     :param obj: an object containing the following attributes:
-    #
-    #         - ``name`` (required): An item of the enumeration ``ContactName``
-    #           representing the type of this contact information.
-    #
-    #         - ``value`` (required): The string representation of this contact
-    #           information.
-    #
-    #         - ``is_primary`` (optional): Indicate whether this contact property is
-    #           the first to be used to contact the entity that this contact
-    #           information corresponds to.  There is only one primary contact
-    #           property for a given property name (e.g., ``EMAIL``, ``PHONE``,
-    #           ``WEBSITE``).
-    #
-    #         - ``is_verified`` (optional): indicate whether this contact information
-    #           has been verified, whether it has been grabbed from a trusted Social
-    #           Networking Service (SNS), or whether through a challenge/response
-    #           process.
-    #
-    #
-    #     :raise ValueError: If the value of this contact information is null.
-    #     """
-    #     return obj if isinstance(obj, Contact) \
-    #         else Contact(
-    #             ContactName(obj.property_name),
-    #             obj.property_value,
-    #             is_primary=obj.is_primary and string_utils.string_to_boolean(obj.is_primary, strict=True),
-    #             is_verified=obj.is_verified and string_utils.string_to_boolean(obj.is_verified, strict=True))
+    @staticmethod
+    def find_property_name(
+            property_value: str
+    ) -> ContactName:
+        """
+        Determine the contact type (property name) that corresponds to the
+        provided contact value.
+
+
+        :param property_value: A string representing a contact value (e.g.,
+            an email address, phone number, or website URL).
+
+
+        :return: The corresponding contact type (property name).
+
+
+        :raise InvalidContactException: If no matching contact type is found
+            for the provided property value, indicating that the value does
+            not conform to any known contact formats.
+        """
+        for property_name, regex in CONTACT_NAME_REGEX_MAPPING.items():
+            if regex.match(property_value):
+                return property_name
+
+        raise InvalidContactException(
+            f"Invalid contact information: \"{property_value}\" does not match any "
+            "recognized formats for contact types."
+        )
 
     @classmethod
     def from_string(
             cls,
             property_value: str,
             is_primary: bool | None = None,
-            is_verified: bool | None = False,
+            is_verified: bool = False,
             visibility: Visibility | None = None
     ) -> Contact:
         """
-        Create a ``Contact`` object based on a given contact value string.
+        Create a ``Contact`` object based on a string representation of a
+        contact value.
 
         This method attempts to determine the type of contact information (e.g.,
         email, phone, website) from the provided `property_value` string by
@@ -304,22 +300,19 @@ class Contact(BaseModel):
             with the specified attributes.
 
 
-        :raise InvalidContactException: If the ``property_value`` does not
-            match any recognized contact type, this exception is raised.
+        :raise InvalidContactException: If no matching contact type is found
+            for the provided property value, indicating that the value does
+            not conform to any known contact formats.
         """
-        for property_name, regex in cls.__CONTACT_NAME_REGEX_MAPPING.items():
-            if regex.match(property_value):
-                return Contact(
-                    is_primary=is_primary,
-                    is_verified=is_verified,
-                    property_name=property_name,
-                    property_value=property_value,
-                    visibility=visibility
-                )
-        else:
-            raise cls.InvalidContactException(
-                f"Unsupported contact information \"{property_value}\""
-            )
+        property_name = cls.find_property_name(property_value)
+
+        return Contact(
+            is_primary=is_primary,
+            is_verified=is_verified,
+            property_name=property_name,
+            property_value=property_value,
+            visibility=visibility
+        )
 
     @field_validator('property_value', mode='before')
     @classmethod
