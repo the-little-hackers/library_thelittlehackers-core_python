@@ -35,7 +35,6 @@ from typing import Type
 from uuid import UUID
 
 import normality
-import unidecode
 
 from thelittlehackers.constant import regex
 from thelittlehackers.constant.data_type import DataType
