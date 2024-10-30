@@ -34,6 +34,7 @@ from typing import List
 from typing import Type
 from uuid import UUID
 
+import normality
 import unidecode
 
 from thelittlehackers.constant import regex
@@ -405,7 +406,7 @@ def string_to_ipv4(
     return ipv4_address
 
 
-def string_to_keywords(s: str, keyword_minimal_length: int = 1) -> List[str]:
+def string_to_keywords(value: str, keyword_minimal_length: int = 1) -> List[str]:
     """
     Convert a string to a list of distinct keywords by removing
     punctuation, reducing whitespace, and converting accented Unicode
@@ -418,7 +419,7 @@ def string_to_keywords(s: str, keyword_minimal_length: int = 1) -> List[str]:
     - Splitting the string into unique keywords and filtering by length.
 
 
-    :param s: The input string to be processed into keywords.
+    :param value: The input string to be processed into keywords.
 
     :param keyword_minimal_length: The minimum length a keyword must have
         to be included in the final list.
@@ -428,11 +429,11 @@ def string_to_keywords(s: str, keyword_minimal_length: int = 1) -> List[str]:
         accentuated characters, and extra spaces, meeting the specified
         minimal length.
     """
-    if is_empty_or_none(s):
+    if is_empty_or_none(value):
         return []
 
     # Convert the string to ASCII lower characters.
-    ascii_string = unidecode.unidecode(s).lower()
+    ascii_string = normality.normalize(value)
 
     # Replace any punctuation character with space.
     no_punctuation_string = ''.join([
