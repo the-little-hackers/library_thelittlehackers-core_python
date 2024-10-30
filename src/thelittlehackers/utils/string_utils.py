@@ -28,11 +28,13 @@ import dateutil.parser
 import re
 import string
 from enum import Enum
-from typing import Any
 from typing import AnyStr
 from typing import Callable
+from typing import List
 from typing import Type
 from uuid import UUID
+
+import unidecode
 
 from thelittlehackers.constant import regex
 from thelittlehackers.constant.data_type import DataType
@@ -44,6 +46,7 @@ from thelittlehackers.utils.any_utils import is_empty_or_none
 REGEX_EMAIL_ADDRESS: re.Pattern[[AnyStr]] = re.compile(regex.REGEX_PATTERN_EMAIL_ADDRESS)
 REGEX_IPV4: re.Pattern[AnyStr] = re.compile(regex.REGEX_PATTERN_IPV4)
 REGEX_MAC_ADDRESS: re.Pattern[AnyStr] = re.compile(regex.REGEX_PATTERN_MAC_ADDRESS)
+
 
 
 def is_valid_email_address(value: str | None) -> bool:
@@ -402,6 +405,98 @@ def string_to_ipv4(
     return ipv4_address
 
 
+def string_to_keywords(s: str, keyword_minimal_length: int = 1) -> List[str]:
+    """
+    Convert a string to a list of distinct keywords by removing
+    punctuation, reducing whitespace, and converting accented Unicode
+    characters to ASCII.
+
+    This function cleanses a given string by:
+    - Converting Unicode characters to their ASCII equivalents.
+    - Removing all punctuation.
+    - Reducing any multiple spaces to a single space.
+    - Splitting the string into unique keywords and filtering by length.
+
+
+    :param s: The input string to be processed into keywords.
+
+    :param keyword_minimal_length: The minimum length a keyword must have
+        to be included in the final list.
+
+
+    :return: A list of unique keywords, stripped of punctuation,
+        accentuated characters, and extra spaces, meeting the specified
+        minimal length.
+    """
+    if is_empty_or_none(s):
+        return []
+
+    # Convert the string to ASCII lower characters.
+    ascii_string = unidecode.unidecode(s).lower()
+
+    # Replace any punctuation character with space.
+    no_punctuation_string = ''.join([
+        ' ' if c in string.punctuation else c
+        for c in ascii_string
+    ])
+
+    # Remove any double space character.
+    cleansed_string = re.sub(r'\s{2,}', ' ', no_punctuation_string)
+
+    # Decompose the string into distinct keywords.
+    distinct_keywords = set(cleansed_string.split(' '))
+
+    # Filter out keywords of less than 2 characters.
+    valid_keywords = [
+        keywords
+        for keywords in distinct_keywords
+        if len(keywords) > keyword_minimal_length
+    ]
+
+    return valid_keywords
+
+
+def string_to_locale(
+        value: str | Locale | None,
+        strict: bool = True
+) -> Locale | None:
+    """
+    Convert a string representation of a locale to its corresponding
+    ``Locale`` object.
+
+
+    :param value: The input to be converted into a locale.  The input
+        needs to be a ISO 639-3 alpha-3 code (or alpha-2 code), optionally
+         followed by a dash character `-` and a ISO 3166-1 alpha-2 code.
+
+    :param strict: A boolean flag indicating whether to enforce strict
+        validation.  If ``True``, the input value must strictly comply
+        with RFC 4646, otherwise a ``ValueError`` is raised.  If ``False``,
+        the input value can be a Java-style locale (character `_` instead
+        of `-`).
+
+
+    :return: The ``Locale`` object corresponding to the string.
+
+
+    :raise MalformedLocaleException: If ``locale`` does not represent a
+        valid locale.
+    """
+    try:
+        locale = None if any_utils.is_empty_or_none(value) \
+            else value if isinstance(value, Locale) \
+            else Locale.from_string(value, strict=strict)
+    except Locale.MalformedLocaleException as exception:
+        if strict:
+            raise exception
+
+    if locale is None:
+        if strict:
+            f"The string \"{value}\" does not represent a locale"
+
+    return locale
+
+
 def string_to_mac_address(
         value: str | None,
         strict: bool = True
@@ -462,47 +557,6 @@ def string_to_mac_address(
         mac_address = tuple(pairs)
 
     return mac_address
-
-
-def string_to_locale(
-        value: str | Locale | None,
-        strict: bool = True
-) -> Locale | None:
-    """
-    Convert a string representation of a locale to its corresponding
-    ``Locale`` object.
-
-
-    :param value: The input to be converted into a locale.  The input
-        needs to be a ISO 639-3 alpha-3 code (or alpha-2 code), optionally
-         followed by a dash character `-` and a ISO 3166-1 alpha-2 code.
-
-    :param strict: A boolean flag indicating whether to enforce strict
-        validation.  If ``True``, the input value must strictly comply
-        with RFC 4646, otherwise a ``ValueError`` is raised.  If ``False``,
-        the input value can be a Java-style locale (character `_` instead
-        of `-`).
-
-
-    :return: The ``Locale`` object corresponding to the string.
-
-
-    :raise MalformedLocaleException: If ``locale`` does not represent a
-        valid locale.
-    """
-    try:
-        locale = None if any_utils.is_empty_or_none(value) \
-            else value if isinstance(value, Locale) \
-            else Locale.from_string(value, strict=strict)
-    except Locale.MalformedLocaleException as exception:
-        if strict:
-            raise exception
-
-    if locale is None:
-        if strict:
-            f"The string \"{value}\" does not represent a locale"
-
-    return locale
 
 
 def string_to_string(
