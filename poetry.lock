@@ -369,7 +369,18 @@ files = [
     {file = "typing_extensions-4.12.2.tar.gz", hash = "sha256:1a7ead55c7e559dd4dee8856e3a88b41225abfe1ce8df57b7c13915fe121ffb8"},
 ]
 
+[[package]]
+name = "unidecode"
+version = "1.3.8"
+description = "ASCII transliterations of Unicode text"
+optional = false
+python-versions = ">=3.5"
+files = [
+    {file = "Unidecode-1.3.8-py3-none-any.whl", hash = "sha256:d130a61ce6696f8148a3bd8fe779c99adeb4b870584eeb9526584e9aa091fd39"},
+    {file = "Unidecode-1.3.8.tar.gz", hash = "sha256:cfdb349d46ed3873ece4586b96aa75258726e2fa8ec21d6f00a591d98806c2f4"},
+]
+
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "d949bf51d98c3d0cca8c8177135fdf920f41edfef8a17b4cc4ad56e35b7c0cc1"
+content-hash = "c9b951ac4ac27c1df1be19cfaa3762fdca47ec5ede8c93af86c92d950d8c6a28"
