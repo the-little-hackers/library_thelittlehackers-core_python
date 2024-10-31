@@ -23,14 +23,15 @@
 
 import logging
 from enum import Enum
+from enum import auto
 
 
 class LoggingLevelLiteral(str, Enum):
-    CRITICAL = 'critical'
-    ERROR = 'error'
-    WARNING = 'warning'
-    INFO = 'info'
-    DEBUG = 'debug'
+    CRITICAL = auto()
+    ERROR = auto()
+    WARNING = auto()
+    INFO = auto()
+    DEBUG = auto()
 
 
 LOGGING_LEVELS = {

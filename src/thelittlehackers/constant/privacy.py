@@ -22,6 +22,7 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 from enum import StrEnum
+from enum import auto
 
 
 class Visibility(StrEnum):
@@ -33,23 +34,23 @@ class Visibility(StrEnum):
     with the resource.
     """
     # The resource is accessible only to family members.
-    FAMILY = 'family'
+    FAMILY = auto()
 
     # The resource is accessible only to friends.
-    FRIEND = 'friend'
+    FRIEND = auto()
 
     # The resource is restricted to a specific individual or a select
     # group of individuals.  Only the owner or the people explicitly
     # granted access can view, access, or interact with the resource.
-    PRIVATE = 'private'
+    PRIVATE = auto()
 
     # The resource is accessible to anyone, regardless of whether they are
     # logged in or part of a specific group.  In a public setting, anyone
     # can view, access, or interact with the resource without restrictions.
-    PUBLIC = 'public'
+    PUBLIC = auto()
 
     # The resources that are accessible only to members of a specific
     # group or team within an organization or project.  All team members
     # have access, and they can view, edit, or manage the resource
     # depending on their permissions.
-    TEAM = 'team'
+    TEAM = auto()

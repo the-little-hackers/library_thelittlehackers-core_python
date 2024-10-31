@@ -22,6 +22,7 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 from enum import StrEnum
+from enum import auto
 
 
 class EntityStatus(StrEnum):
@@ -31,7 +32,7 @@ class EntityStatus(StrEnum):
     synchronize objects with remote storage systems, such as client
     applications on mobile devices.
     """
-    DELETED = 'deleted'
-    DISABLED = 'disabled'
-    ENABLED = 'enabled'
-    PENDING = 'pending'
+    DELETED = auto()
+    DISABLED = auto()
+    ENABLED = auto()
+    PENDING = auto()
