@@ -27,13 +27,20 @@ import io
 import os
 import re
 from os import PathLike
+from typing import Optional
+from typing import Tuple
+from typing import Union
 
 import toml
 from functools import reduce
 from itertools import starmap
 
+from pydantic import BaseModel
+from pydantic import Field
+from pydantic import field_validator
 
-class Version:
+
+class Version(BaseModel):
     """
     The software component version numbering is mostly inspired from
     Apache version numbering or similar other version numbering such as
@@ -68,208 +75,62 @@ class Version:
     * PEP 386 - Changing the version comparison module in Distutils
       (http://www.python.org/dev/peps/pep-0386/)
     """
+    major: int = Field(..., ge=0, description="Major version number.")
+    minor: int = Field(0, ge=0, description="Minor version number.")
+    patch: int = Field(0, ge=0, description="Patch version number.")
+
+    prerelease: Optional[str] = Field(
+        None,
+        description="Pre-release version."
+                    ""
+                    "A pre-release version indicates that the version is unstable and might "
+                    "not satisfy the intended compatibility requirements as denoted by its "
+                    "associated normal version."
+    )
+
+    build_metadata: Optional[str] = Field(
+        None,
+        description="Build metadata."
+                    ""
+                    "Build metadata is intended to track build maturity when preparing an "
+                    "application for a public release of any kind, including pre-releases."
+                    ""
+                    "It can sometimes be helpful to include information such as:"
+                    ""
+                    "- The exact git hash of the commit used to produce the current build."
+                    ""
+                    "- The release channel of the build.  For example, is this build a very "
+                    "experimental and potentially broken \"nightly\" release, a semi-stable "
+                    "\"beta\" release containing a few new experimental features, or a "
+                    "robust and well-tested \"stable\" release?"
+                    ""
+                    "- Whether the project as a whole is alpha-level quality (the entire "
+                    "project is pretty new and experimental)."
+    )
+
     # Name of the file in which the version of an application is commonly
     # written.
     DEFAULT_VERSION_FILE_NAME = 'VERSION'
 
     # Regular expression that matches the string representation of a version
     # denoted using a standard tuple of integers ``major.minor.patch``.
-    # REGEX_VERSION = re.compile(r'^(\d+)(.(\d+)(.(\d+)){0,1}){0,1}$')
-    REGEX_PATTERN_SEMANTIC_VERSION = r'^(?P<major>0|[1-9]\d*)\.(?P<minor>0|[1-9]\d*)\.(?P<patch>0|[1-9]\d*)(?:-(?P<prerelease>(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+(?P<buildmetadata>[0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$'
+    REGEX_PATTERN_SEMANTIC_VERSION = re.compile(
+        r'^(?P<major>0|[1-9]\d*)\.(?P<minor>0|[1-9]\d*)\.(?P<patch>0|[1-9]\d*)'
+        r'(?:-(?P<prerelease>(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?'
+        r'(?:\+(?P<buildmetadata>[0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$'
+    )
 
 
-    def __eq__(self, other: Version) -> int:
-        result = self.compare_versions(
-            (self.__major, self.__minor, self.__patch),
-            (other.major, other.minor, other.patch)
-        )
-        return result == 0
+    @field_validator('major', 'minor', 'patch')
+    @classmethod
+    def non_negative(cls, value: int):
+        if value < 0:
+            raise ValueError("Version components must be non-negative.")
+        return value
 
-    def __ge__(self, other: Version) -> bool:
-        return self.__eq__(other) or self.__gt__(other)
-
-    def __gt__(self, other: Version) -> bool:
-        result = self.compare_versions(
-            (self.__major, self.__minor, self.__patch),
-            (other.major, other.minor, other.patch)
-        )
-        return result > 0
-
-    def __init__(
-            self,
-            value: int | str | tuple,
-            *args,
-            strict: bool = True
-    ):
-        """
-        Build a ``Version`` instance providing the version of a software
-        component as either:
-
-        - A string representation of a semantic versioning 3-component number
-          (at least 1);
-
-        - From 1 to 3 integers representing, in that particular order, ``major``,
-          ``minor``, and ``patch``;
-
-        - A tuple of 3 integers ``(major, minor, patch)``.
-
-        For example:
-
-        ```python
-        >>> Version("1")
-        >>> Version("1.2")
-        >>> Version("1.2.8")
-        >>> Version(1)
-        >>> Version(1, 2)
-        >>> Version(1, 2, 8)
-        >>> Version((1,))
-        >>> Version((1, 2)
-        >>> Version((1, 2, 8))
-        ```
-
-
-        :param value: Either a string representation of a software component
-            of the following format: ``major.minor.patch``, or a tuple of 3
-            integers `(major, minor, patch)`, or an integer representing the
-            `major` component number.
-
-        :param args: 1 or 2 integers for respectively the `minor`, and `patch`
-            component numbers of the version, when the argument `value` passed
-            to this function is an integer (the `major` component number).
-
-        :param strict: Indicate whether the string ``s`` needs to strictly
-            comply with Semantic Version 2.
-        """
-        if isinstance(value, str):
-            self.__major, self.__minor, self.__patch, self.__prerelease, self.__build_metadata = self.__convert_string_to_version_component_numbers(value, strict=strict)
-        elif isinstance(value, tuple):
-            self.__major, self.__minor, self.__patch = value + (0,) * (3 - len(value))
-            self.__prerelease = self.__build_metadata = None
-        elif isinstance(value, int):
-            minor_patch = args or ()
-            minor_patch += (0,) * (2 - len(minor_patch))
-            self.__major, self.__minor, self.__patch = (value,) + minor_patch
-            self.__prerelease = self.__build_metadata = None
-        else:
-            raise ValueError(f"Invalid value \"{value}\"")
-
-    def __le__(self, other: Version) -> bool:
-        return self.__eq__(other) or self.__lt__(other)
-
-    def __lt__(self, other: Version) -> bool:
-        result = self.compare_versions(
-            (self.__major, self.__minor, self.__patch),
-            (other.major, other.minor, other.patch)
-        )
-        return result < 0
-
-    def __repr__(self) -> str:
-        return f'{self.__class__.__qualname__}({self.__major}, { self.__minor}, {self.__patch})'
-
-    def __str__(self) -> str:
-        return f'{self.__major}.{self.__minor}.{self.__patch}'
-
-    @property
-    def build_metadata(self) -> str | None:
-        """
-        Return the build metadata when defined.
-
-        Build metadata is intended to track build maturity when preparing an
-        application for a public release of any kind, including pre-releases.
-
-        It can sometimes be helpful to include information such as:
-
-        - The exact git hash of the commit used to produce the current build.
-
-        - The release channel of the build.  For example, is this build a very
-          experimental and potentially broken "nightly" release, a semi-stable
-          "beta" release containing a few new experimental features, or a
-          robust and well-tested "stable" release?
-
-        - Whether the project as a whole is alpha-level quality (the entire
-          project is pretty new and experimental).
-
-
-        :return: The build metadata or ``None``.
-        """
-        return self.__build_metadata
-
-    @staticmethod
-    def compare_versions(
-            this: tuple[int, int, int],
-            other: tuple[int, int, int]
-    ) -> int:
-        """
-        Compare a version to another.
-
-
-        :param this: A tuple ``(major, minor, patch)``.
-
-        :param other: One other tuple ``(major, minor, patch)``.
-
-
-        :return: A negative integer if the first version passed to this
-            function is below the second version passed, ``0`` if these two
-            versions are equivalent, or a positive integer if the first
-            version is above the second version.
-        """
-        return reduce(
-            lambda a, b: 1 if a == 1 else -1 if a == -1 else b,
-            # Use the function `starmap` instead ot the built-in function `map` as
-            # Python 3 doesn't allow tuple parameter unpacking as `map(lambda (a, b): ...`.
-            starmap(
-                lambda a, b: 1 if a > b else -1 if a < b else 0,
-                zip(this, other)
-            )
-        )
 
     @classmethod
-    def __convert_string_to_version_component_numbers(
-            cls,
-            value: str,
-            strict: bool = True
-    ) -> tuple[int, int, int, str, str]:
-        """
-        Convert the string representation of a semantic versioning 3-component
-        number into a tuple of integers `(major, minor, patch)`.
-
-        If only 1-component number is given, the function returns `minor` and
-        `patch` equal to `0`.
-
-
-        :param value: A string representation of a semantic version 1- or
-            3-component number.
-
-        :param strict: Indicate whether the string ``s`` needs to strictly
-            comply with Semantic Version.
-
-
-        :return: A tuple of integers `(major. minor, patch, prerelease, build_metadata)`.
-
-
-        :raise ValueError: If the string ``s`` doesn't comply with Semantic
-            Versioning while the argument ``strict`` is ``true``.
-        """
-        if not isinstance(value, str):
-            raise ValueError(f"The argument 's' is of the wrong type '{type(value)}'")
-
-        if value is None and strict:
-            raise ValueError(f"The argument 's' MUST NOT be null")
-
-        match = re.match(cls.REGEX_PATTERN_SEMANTIC_VERSION, value.strip())
-        if match:
-            major = match.group('major')
-            minor = match.group('minor')
-            patch = match.group('patch')
-            prerelease = match.group('prerelease')
-            build_metadata = match.group('buildmetadata')
-
-            return int(major), int(minor or 0), int(patch or 0), prerelease, build_metadata
-        elif strict:
-            raise ValueError(f"The value \"{value}\" doesn't comply with Semantic Versioning")
-
-    @classmethod
-    def from_file(cls, path: str, file_name: str = None) -> Version:
+    def from_file(cls, path: PathLike, file_name: str | None = None) -> Version:
         """
         Return a version written in a file.
 
@@ -282,14 +143,15 @@ class Version:
 
         :return: An object {@link Version}.
         """
-        version_file_path_name = os.path.join(path, file_name or cls.DEFAULT_VERSION_FILE_NAME)
-        with io.open(version_file_path_name, mode='rt', encoding='utf-8') as fd:
-            version = Version(fd.read())
+        version_file_path = os.path.join(path, file_name or cls.DEFAULT_VERSION_FILE_NAME)
+        with open(version_file_path, mode='rt', encoding='utf-8') as fd:
+            version_str = fd.read().strip()
+        return cls.from_string(version_str)
 
-        return version
 
-    @staticmethod
+    @classmethod
     def from_pyproject(
+            cls,
             project_root_path: PathLike,
             strict: bool = True
     ) -> Version | None:
@@ -318,52 +180,54 @@ class Version:
         :raise KeyError: If the ``version`` key is missing in the
             ``pyproject.toml`` file and ``strict`` is ``True``.
         """
+        pyproject_path_file_name = os.path.join(project_root_path, 'pyproject.toml')
         try:
-            with open(os.path.join(project_root_path, 'pyproject.toml'), 'rt') as fd:
-                pyproject_data = toml.load(fd)
-            return Version(pyproject_data['tool']['poetry']['version'])
+            with open(pyproject_path_file_name, mode='rt') as fd:
+                data = toml.load(fd)
+            version_str = data['tool']['poetry']['version']
+            return cls.from_string(version_str)
         except (FileNotFoundError, KeyError) as exception:
             if strict:
                 raise exception
 
         return None
 
-    @staticmethod
-    def from_string(s: str) -> Version | None:
+    @classmethod
+    def from_string(cls, value: str) -> Version:
         """
         Return the version corresponding to the specified string.
 
 
-        :param s: A string representing a version.
+        :param value: A string representing a version.
 
 
         :return: The version corresponding to the string, or ``None`` if the
             argument ``s`` is null.
         """
-        return s and Version(s)
+        match = cls.REGEX_PATTERN_SEMANTIC_VERSION.match(value)
+        if not match:
+            raise ValueError(f"Invalid version string: {value}")
 
-    @property
-    def major(self) -> int:
-        return self.__major
+        major, minor, patch = int(match.group('major')), int(match.group('minor')), int(match.group('patch'))
+        prerelease = match.group('prerelease')
+        build_metadata = match.group('buildmetadata')
+        return cls(major=major, minor=minor, patch=patch, prerelease=prerelease, build_metadata=build_metadata)
 
-    @property
-    def minor(self) -> int:
-        return self.__minor
+    def __eq__(self, other: Version) -> bool:
+        return (self.major, self.minor, self.patch) == (other.major, other.minor, other.patch)
 
-    @property
-    def patch(self) -> int:
-        return self.__patch
+    def __gt__(self, other: Version) -> bool:
+        return (self.major, self.minor, self.patch) > (other.major, other.minor, other.patch)
 
-    @property
-    def prerelease(self) -> str | None:
-        """
-        Return the pre-release version when defined.
+    def __lt__(self, other: Version) -> bool:
+        return (self.major, self.minor, self.patch) < (other.major, other.minor, other.patch)
 
-        A pre-release version indicates that the version is unstable and might
-        not satisfy the intended compatibility requirements as denoted by its
-        associated normal version.
+    def __str__(self) -> str:
+        version_str = f"{self.major}.{self.minor}.{self.patch}"
+        if self.prerelease:
+            version_str += f"-{self.prerelease}"
+        if self.build_metadata:
+            version_str += f"+{self.build_metadata}"
+        return version_str
+#
 
-
-        :return: The pre-release version or ``None``.
-        """
-        return self.__prerelease
