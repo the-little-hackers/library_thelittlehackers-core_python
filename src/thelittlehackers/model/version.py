@@ -27,14 +27,11 @@ import io
 import os
 import re
 from os import PathLike
+from typing import ClassVar
 from typing import Optional
-from typing import Tuple
-from typing import Union
+
 
 import toml
-from functools import reduce
-from itertools import starmap
-
 from pydantic import BaseModel
 from pydantic import Field
 from pydantic import field_validator
@@ -110,11 +107,11 @@ class Version(BaseModel):
 
     # Name of the file in which the version of an application is commonly
     # written.
-    DEFAULT_VERSION_FILE_NAME = 'VERSION'
+    DEFAULT_VERSION_FILE_NAME: ClassVar[str] = 'VERSION'
 
     # Regular expression that matches the string representation of a version
     # denoted using a standard tuple of integers ``major.minor.patch``.
-    REGEX_PATTERN_SEMANTIC_VERSION = re.compile(
+    REGEX_PATTERN_SEMANTIC_VERSION: ClassVar[re.Pattern] = re.compile(
         r'^(?P<major>0|[1-9]\d*)\.(?P<minor>0|[1-9]\d*)\.(?P<patch>0|[1-9]\d*)'
         r'(?:-(?P<prerelease>(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?'
         r'(?:\+(?P<buildmetadata>[0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$'
