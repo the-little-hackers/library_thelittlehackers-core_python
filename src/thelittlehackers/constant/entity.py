@@ -28,11 +28,13 @@ from enum import auto
 class EntityStatus(StrEnum):
     """
     Enumeration of standard statuses for a persistent object stored in a
-    primary storage system. These statuses are used to reference and
+    primary storage system.  These statuses are used to reference and
     synchronize objects with remote storage systems, such as client
     applications on mobile devices.
     """
+    ACCEPTED: auto()
     DELETED = auto()
     DISABLED = auto()
     ENABLED = auto()
     PENDING = auto()
+    REJECTED: auto()
