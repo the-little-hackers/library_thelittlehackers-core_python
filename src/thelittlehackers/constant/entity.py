@@ -32,9 +32,9 @@ class EntityStatus(StrEnum):
     synchronize objects with remote storage systems, such as client
     applications on mobile devices.
     """
-    ACCEPTED: auto()
+    ACCEPTED = auto()
     DELETED = auto()
     DISABLED = auto()
     ENABLED = auto()
     PENDING = auto()
-    REJECTED: auto()
+    REJECTED = auto()
