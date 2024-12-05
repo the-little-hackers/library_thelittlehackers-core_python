@@ -48,6 +48,26 @@ REGEX_IPV4: re.Pattern[AnyStr] = re.compile(regex.REGEX_PATTERN_IPV4)
 REGEX_MAC_ADDRESS: re.Pattern[AnyStr] = re.compile(regex.REGEX_PATTERN_MAC_ADDRESS)
 
 
+def is_empty(value: str) -> bool:
+    """
+    Checks if the specified value is empty.
+
+    A value is considered empty if it is an empty string after stripping
+    whitespace.
+
+
+    :param value: The value to check for being empty.
+
+    :return: ``True`` if the value is empty , ``False`` otherwise.
+
+
+    :raise ValueError: if the input value is ``None``.
+    """
+    if value is None:
+        raise ValueError("Input value cannot be None.")
+
+    return len(value.strip()) == 0
+
 
 def is_valid_email_address(value: str | None) -> bool:
     """
@@ -692,7 +712,7 @@ def string_to_version(
     try:
         version = None if any_utils.is_empty_or_none(value) \
             else value if isinstance(value, Version) \
-            else Version(value, strict=strict)
+            else Version.from_string(value)
     except ValueError as error:
         if strict:
             raise error
