@@ -23,7 +23,14 @@
 
 from __future__ import annotations
 
+from typing import Optional
+
+from pydantic import BaseModel
+from pydantic import Field
+from pydantic import field_validator
+
 from thelittlehackers.constant.locale import ISO_3166_1_ALPHA_2_CODES
+from thelittlehackers.utils import string_utils
 
 
 class InvalidCountryCode(Exception):
@@ -32,13 +39,19 @@ class InvalidCountryCode(Exception):
     """
 
 
-class Country:
+class Country(BaseModel):
     """
     Represent a country that corresponds to a tag respecting ISO 3166.
 
     A country is expressed by a ISO 3166-1 alpha-2 code.  For example, "US"
     represents the United States of America.
     """
+    country_code: Optional[str] = Field(
+        None,
+        description="An ISO 3166-1 alpha-2 code.",
+        frozen=True
+    )
+
     @classmethod
     def assert_country_code(cls, code: str, strict: bool = True) -> None:
         """
@@ -86,38 +99,11 @@ class Country:
 
         return self.__hash
 
-    def __init__(
-            self,
-            country_code: str,
-            strict: bool = True
-    ):
-        """
-        Build a country providing a ISO 3166-1 alpha-2 code.
-
-
-        :param country_code: A ISO 3166-1 alpha-2 code.
-
-        :param strict: Indicate if the string representation of a country MUST
-            be given in uppercase.
-
-
-        :raise InvalidCountryCode: If the argument `country_code` doesn't
-            match a valid country_code code.
-        """
-        if country_code:
-            self.assert_country_code(country_code, strict=strict)
-
-        self.__country_code = country_code.upper()
-
     def __repr__(self) -> str:
         return self.to_string()
 
     def __str__(self) -> str:
         return self.to_string()
-
-    @property
-    def country_code(self) -> str:
-        return self.__country_code
 
     @staticmethod
     def from_string(country_code: str | None, strict: bool = True) -> Country | None:
@@ -139,7 +125,7 @@ class Country:
         if not country_code:
             return None
 
-        return Country(country_code, strict=strict)
+        return Country(country_code=country_code)
 
     @classmethod
     def is_country_code(cls, code: str, strict: bool = True) -> bool:
@@ -158,3 +144,27 @@ class Country:
             alpha-2 code.
         """
         return self.__country_code
+
+    @field_validator('country_code', mode='before')
+    @classmethod
+    def validate_country_code(cls, value: str | None) -> str | None:
+        """
+        Validate the given country code as a valid ISO 3166-1 alpha-2 code.
+
+
+        :param value: An ISO 3166-1 alpha-2 country code (e.g., 'US' for the
+            United States) or `None`.
+
+
+        :return: An ISO 3166-1 alpha-2 code or `None`.
+
+
+        :raise ValueError: If the given country code not `None` and is invalid.
+        """
+        if string_utils.is_empty_or_none(value):
+            return None
+
+        value = value.upper()
+        cls.assert_country_code(value, strict=True)
+
+        return value
