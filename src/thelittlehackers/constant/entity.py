@@ -36,5 +36,7 @@ class EntityStatus(StrEnum):
     DELETED = auto()
     DISABLED = auto()
     ENABLED = auto()
+    FAILED = auto()
     PENDING = auto()
     REJECTED = auto()
+    SUCCEEDED = auto()
