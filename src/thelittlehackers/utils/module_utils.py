@@ -222,5 +222,5 @@ def load_class(class_module_package_name):
     :return: The specified class.
     """
     module_package_name, class_name = class_module_package_name.rsplit('.', 1)
-
-    return getattr(load_module(module_package_name), class_name)
+    module = load_module(module_package_name)
+    return getattr(module, class_name, None)
