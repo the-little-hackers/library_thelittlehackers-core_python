@@ -60,36 +60,64 @@ class Contact(BaseModel):
     numbers, the Uniform Resource Locator (URL) of a website.
     """
 
-    is_primary: Optional[bool] = Field(
-        None,
-        description="Specify whether this contact information is the primary contact for "
-                    "this type of contact information.",
+    is_primary: bool = Field(
+        default=False,
+        description=(
+            "Specify whether this contact information is the primary contact for "
+            "this type of contact information."
+        ),
         frozen=False
     )
 
-    is_verified: Optional[bool] = Field(
-        None,
-        description="Specify whether this contact information has been verified, i.e., it "
-                    "has been grabbed from a trusted Social Networking Service (SNS), or "
-                    "through a challenge/response process.",
+    is_verified: bool = Field(
+        default=False,
+        description=(
+            "Specify whether this contact information has been verified, i.e., it "
+            "has been grabbed from a trusted Social Networking Service (SNS), or "
+            "through a challenge/response process."
+        ),
         frozen=False,
     )
 
     property_name: ContactName = Field(
         ...,
-        description="The name (type) of this contact information.",
+        description=(
+            "The name (type) of this contact information:\n"
+            "- `ContactType.EMAIL`: An electronic mail address.\n"
+            "- `ContactType.PHONE`: A phone number in E.164 numbering plan, formatted according "
+            "   to RFC 5733 (Extensible Provisioning Protocol (EPP) Contact Mapping). "
+            "   EPP-style phone numbers use the format `+CCC.NNNNNNNNNNxEEEE`, where "
+            "   `C` is the 1–3 digit country code, `N` is up to 14 digits, and `E` "
+            "   is the (optional) extension.  The leading plus sign and the dot "
+            "   following the country code are required.  The literal \"x\" character "
+            "   is required only if an extension is provided."
+        ),
         frozen=True
+    )
+
+    property_parameters: Optional[str] = Field(
+        ...,
+        description=(
+            "The property value of the contact information can be further qualified "
+            "with a property parameter expression.  The property parameter "
+            "expression is specified as either a single string or `name=value`,"
+            "separated with comas."
+        ),
+        frozen=False
     )
 
     property_value: str = Field(
         ...,
-        description="A string representation of the value associated to the contact "
-                    "information.",
+        description=(
+            "A string representation of the value associated to the contact "
+            "information.  Each property must be unique for a given account, "
+            "defined by both its name and value."
+        ),
         frozen=True
     )
 
     visibility: Optional[Visibility] = Field(
-        Visibility.PRIVATE,
+        default=Visibility.PRIVATE,
         description="The visibility of this contact information to other users.",
         frozen=False
     )
