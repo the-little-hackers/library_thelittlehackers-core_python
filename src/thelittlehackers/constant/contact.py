@@ -25,6 +25,19 @@ from enum import StrEnum
 
 
 class ContactName(StrEnum):
-    EMAIL = 'EMAIL'
-    PHONE = 'PHONE'
-    WEBSITE = 'WEBSITE'
+    """
+    Enumeration representing various types of contact methods.
+
+    This class defines the different types of contact information
+    that can be associated with a user or organization.  Each type is
+    represented as a string value, allowing for easy identification
+    and categorization of contact methods.
+    """
+    # Represents an email contact method.
+    EMAIL = 'email'
+
+    # Represents a phone number contact method.
+    PHONE = 'phone'
+
+    # Represents a website contact method.
+    WEBSITE = 'website'
