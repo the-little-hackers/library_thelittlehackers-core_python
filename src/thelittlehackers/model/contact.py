@@ -81,17 +81,7 @@ class Contact(BaseModel):
 
     property_name: ContactName = Field(
         ...,
-        description=(
-            "The name (type) of this contact information:\n"
-            "- `ContactType.EMAIL`: An electronic mail address.\n"
-            "- `ContactType.PHONE`: A phone number in E.164 numbering plan, formatted according "
-            "   to RFC 5733 (Extensible Provisioning Protocol (EPP) Contact Mapping). "
-            "   EPP-style phone numbers use the format `+CCC.NNNNNNNNNNxEEEE`, where "
-            "   `C` is the 1–3 digit country code, `N` is up to 14 digits, and `E` "
-            "   is the (optional) extension.  The leading plus sign and the dot "
-            "   following the country code are required.  The literal \"x\" character "
-            "   is required only if an extension is provided."
-        ),
+        description="The name (type) of this contact information:",
         frozen=True
     )
 
@@ -192,73 +182,6 @@ class Contact(BaseModel):
                 f"Invalid value \"{property_value}\" for contact type \"{property_name}\". "
                 f"Expected format does not match."
             )
-
-    # @staticmethod
-    # def from_json(payload: Collection | None) -> Contact | None:
-    #     """
-    #     Convert a JSON-like dictionary representing contact information into
-    #     an instance of ``Contact``.
-    #
-    #     This method interprets the provided dictionary and converts it into a
-    #     ``Contact`` object, extracting the contact type, value, and optional
-    #     attributes such as whether the contact is primary or verified.
-    #
-    #
-    #     :param payload: A dictionary representing the contact information in
-    #         the format:
-    #
-    #         ```json
-    #         [ type:ContactName, value:string, [is_primary:boolean, [is_verified:boolean]] ]
-    #         ```
-    #
-    #         Note: ``payload`` can also be ``None``, in which case the method
-    #             returns ``None``.
-    #
-    #
-    #     :return: An instance ``Contact``, or ``None`` if ``payload`` is ``None``.
-    #
-    #
-    #     :raise TypeError: If the provided payload is not a list, a dictionary,
-    #         or a tuple.
-    #
-    #     :raise ValueError: If the provided type of this contact information
-    #         is not a string representation of an item of the enumeration
-    #         ``ContactName``.
-    #     """
-    #     if payload is None:
-    #         return None
-    #
-    #     if not isinstance(payload, Collection):
-    #         raise TypeError(
-    #             f"Expected an object of type Sized for payload, got \"{type(payload).__name__}\""
-    #         )
-    #
-    #     contact_element_number = len(payload)
-    #     if contact_element_number < 2 or contact_element_number > 4:
-    #         raise ValueError("Invalid contact information format")
-    #
-    #     # Unpack the contact information with default values for optional fields.
-    #     property_name, property_value = payload[:2]
-    #     is_primary, is_verified = (
-    #         list(payload[2:]) + [None] * (4 - contact_element_number)
-    #     )
-    #
-    #     # Convert string to ContactName enum and ensure it's valid.
-    #     try:
-    #         contact_name_enum = ContactName(property_name)
-    #     except ValueError as exception:
-    #         raise ValueError(f"Invalid contact type \"{property_name}\"") from exception
-    #
-    #     # Convert string values to booleans where necessary
-    #     is_primary_bool = is_primary and string_utils.string_to_boolean(is_primary, strict=True)
-    #     is_verified_bool = is_verified and string_utils.string_to_boolean(is_verified, strict=True)
-    #
-    #     return Contact(
-    #         contact_name_enum,
-    #         property_value,
-    #         is_primary=is_primary_bool,
-    #         is_verified=is_verified_bool
-    #     )
 
     @staticmethod
     def find_property_name(

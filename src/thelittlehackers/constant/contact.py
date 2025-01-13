@@ -28,16 +28,21 @@ class ContactName(StrEnum):
     """
     Enumeration representing various types of contact methods.
 
-    This class defines the different types of contact information
-    that can be associated with a user or organization.  Each type is
-    represented as a string value, allowing for easy identification
-    and categorization of contact methods.
+    This class defines different types of contact information that can be
+    associated with a user or organization.  Each type is represented as
+    an uppercase string value, following the vCard (Virtual Contact File)
+    specification for electronic business cards.
+
+    :note: The values of the enumeration members are explicitly defined
+        as uppercase strings to comply with the vCard specification.
+        `auto()` is not used to ensure the values remain consistent with
+        this format.
     """
     # Represents an email contact method.
-    EMAIL = 'email'
+    EMAIL = 'EMAIL'
 
     # Represents a phone number contact method.
-    PHONE = 'phone'
+    PHONE = 'PHONE'
 
     # Represents a website contact method.
-    WEBSITE = 'website'
+    WEBSITE = 'WEBSITE'
