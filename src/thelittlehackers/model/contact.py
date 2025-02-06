@@ -58,8 +58,16 @@ class Contact(BaseModel):
     """
     Represent a contact information, such as an e-mail address, a phone
     numbers, the Uniform Resource Locator (URL) of a website.
-    """
 
+    A contact information is defined by property composed of:
+    - A name, which indicates the type of contact (e.g., email address,
+      phone number).
+    - A value, which holds the actual contact detail (e.g., the email
+      address or phone number).
+
+    Each contact information must be unique for a given name/value pair,
+    ensuring that no duplicate entries exist with the same name and value.
+    """
     is_primary: bool = Field(
         default=False,
         description=(
@@ -81,12 +89,22 @@ class Contact(BaseModel):
 
     property_name: ContactName = Field(
         ...,
-        description="The name (type) of this contact information:",
+        description=(
+            "The name (type) of this contact information:\n"
+            "- `ContactType.EMAIL`: An electronic mail address.\n"
+            "- `ContactType.PHONE`: A phone number in E.164 numbering plan, formatted according "
+            "   to RFC 5733 (Extensible Provisioning Protocol (EPP) Contact Mapping). "
+            "   EPP-style phone numbers use the format `+CCC.NNNNNNNNNNxEEEE`, where "
+            "   `C` is the 1–3 digit country code, `N` is up to 14 digits, and `E` "
+            "   is the (optional) extension.  The leading plus sign and the dot "
+            "   following the country code are required.  The literal \"x\" character "
+            "   is required only if an extension is provided."
+        ),
         frozen=True
     )
 
     property_parameters: Optional[str] = Field(
-        ...,
+        None,
         description=(
             "The property value of the contact information can be further qualified "
             "with a property parameter expression.  The property parameter "
