@@ -68,7 +68,7 @@ class Contact(BaseModel):
     Each contact information must be unique for a given name/value pair,
     ensuring that no duplicate entries exist with the same name and value.
     """
-    is_primary: bool = Field(
+    is_primary: Optional[bool] = Field(
         default=False,
         description=(
             "Specify whether this contact information is the primary contact for "
@@ -77,7 +77,7 @@ class Contact(BaseModel):
         frozen=False
     )
 
-    is_verified: bool = Field(
+    is_verified: Optional[bool] = Field(
         default=False,
         description=(
             "Specify whether this contact information has been verified, i.e., it "
@@ -104,14 +104,14 @@ class Contact(BaseModel):
     )
 
     property_parameters: Optional[str] = Field(
-        None,
+        default=None,
         description=(
             "The property value of the contact information can be further qualified "
             "with a property parameter expression.  The property parameter "
             "expression is specified as either a single string or `name=value`,"
             "separated with comas."
         ),
-        frozen=False
+        frozen=True
     )
 
     property_value: str = Field(
