@@ -89,32 +89,3 @@ def generate_hierarchical_file_path(
     """
     path = generate_hierarchical_path(file_name, directory_depth)
     return Path.joinpath(path, file_name)
-
-
-def make_path_if_not_exists(path: Path) -> None:
-    """
-    Create the specified directory path, including any necessary
-    intermediate directories.  If the directory already exists, no error
-    is raised.
-
-    The directories are created with the default mode `0o777`.
-
-
-    :param path: The directory path to create.
-
-
-    :raise OSError: If the directory cannot be created due to reasons
-        other than it already existing.
-    """
-    path.mkdir(parents=True, exist_ok=True)
-
-
-def remove_file(file_path: Path) -> None:
-    """
-    Delete the specified file.  If the file does not exist, no error is
-    raised.
-
-
-    :param file_path: The path to the file to be removed.
-    """
-    file_path.unlink(missing_ok=True)
