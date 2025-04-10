@@ -21,10 +21,54 @@
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+import hashlib
+from io import BytesIO
 from pathlib import Path
 
 
+# The default number of bytes to read when processing a file.
+DEFAULT_READ_CHUNK_SIZE = 8192
+
+# The default number of subdirectories to generate.
 DEFAULT_DIRECTORY_DEPTH = 8
+
+
+def calculate_file_size_and_checksum(
+        file: BytesIO,
+        read_chunk_size: int = DEFAULT_READ_CHUNK_SIZE
+) -> tuple[int, str]:
+    """
+    Calculate the size and SHA-256 checksum of an uploaded file.
+
+    This function reads the file in chunks to efficiently compute its size
+    and hash without loading the entire file into memory.
+
+
+    :param file: The uploaded file.
+
+    :param read_chunk_size: The number of bytes to read at a time when
+        processing the file.
+
+
+    :return: A tuple containing:
+        - The file size in bytes.
+        - The SHA-256 checksum as a hexadecimal string.
+    """
+    if read_chunk_size <= 0:
+        raise ValueError("read_chunk_size must be a positive integer")
+
+    hash_sha256 = hashlib.sha256()
+    file_size = 0
+
+    # Read the file in chunks to compute hash and size efficiently.
+    file.seek(0)  # Ensure the file pointer is at the beginning
+    while chunk := file.read(read_chunk_size):
+        hash_sha256.update(chunk)  # type: ignore
+        file_size += len(chunk)
+
+    file_checksum = hash_sha256.hexdigest()
+
+    return file_size, file_checksum
 
 
 def generate_hierarchical_path(
