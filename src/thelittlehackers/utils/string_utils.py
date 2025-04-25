@@ -28,7 +28,7 @@ import dateutil.parser
 import re
 import string
 from enum import Enum
-from typing import AnyStr
+from re import Pattern
 from typing import Callable
 from typing import List
 from typing import Type
@@ -38,14 +38,16 @@ import normality
 
 from thelittlehackers.constant import regex
 from thelittlehackers.constant.data_type import DataType
+from thelittlehackers.model.locale import MalformedLocaleException
 from thelittlehackers.model.version import Version
 from thelittlehackers.utils import any_utils
 from thelittlehackers.utils import module_utils
 from thelittlehackers.utils.any_utils import is_empty_or_none
 
-REGEX_EMAIL_ADDRESS: re.Pattern[[AnyStr]] = re.compile(regex.REGEX_PATTERN_EMAIL_ADDRESS)
-REGEX_IPV4: re.Pattern[AnyStr] = re.compile(regex.REGEX_PATTERN_IPV4)
-REGEX_MAC_ADDRESS: re.Pattern[AnyStr] = re.compile(regex.REGEX_PATTERN_MAC_ADDRESS)
+
+REGEX_EMAIL_ADDRESS: Pattern[str] = re.compile(regex.REGEX_PATTERN_EMAIL_ADDRESS)
+REGEX_IPV4: Pattern[str] = re.compile(regex.REGEX_PATTERN_IPV4)
+REGEX_MAC_ADDRESS: Pattern[str] = re.compile(regex.REGEX_PATTERN_MAC_ADDRESS)
 
 
 def is_empty(value: str) -> bool:
@@ -506,7 +508,7 @@ def string_to_locale(
         locale = None if any_utils.is_empty_or_none(value) \
             else value if isinstance(value, Locale) \
             else Locale.from_string(value, strict=strict)
-    except Locale.MalformedLocaleException as exception:
+    except MalformedLocaleException as exception:
         if strict:
             raise exception
 
