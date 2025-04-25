@@ -399,7 +399,7 @@ class Locale(BaseModel):
 
         :raise ValueError: If the given country code not `None` and is invalid.
         """
-        if string_utils.is_empty_or_none(value):
+        if string_utils.is_empty(value):
             return None
 
         value = value.upper()
@@ -425,7 +425,7 @@ class Locale(BaseModel):
 
         :raise ValueError: If the given language code is invalid.
         """
-        if string_utils.is_empty_or_none(value):
+        if string_utils.is_empty(value):
             raise ValueError("Expecting a non-empty string for language code.")
 
         value = value.lower()
