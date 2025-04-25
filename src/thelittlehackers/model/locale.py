@@ -35,7 +35,7 @@ from thelittlehackers.constant.locale import ISO_3166_1_ALPHA_2_CODES
 from thelittlehackers.constant.locale import ISO_639_1_CODES
 from thelittlehackers.constant.locale import ISO_639_1_CODES_TO_ISO_639_3_CODES
 from thelittlehackers.constant.locale import ISO_639_3_CODES
-from thelittlehackers.utils import string_utils
+from thelittlehackers.utils import any_utils
 
 REGEX_PATTERN_LANGUAGE_CODE = r'[a-z]{2,3}'
 REGEX_PATTERN_COUNTRY_CODE = r'[A-Z]{2}'
@@ -107,8 +107,8 @@ class Locale(BaseModel):
     identifiers `en`, `de`, and `zh`).  Normal locales specify a language
     in a particular region (for example `en-GB`, `de-AT`, and `zh-SG`).
 
-    A locale is expressed by a ISO 639-3 alpha-3 code element, optionally
-    followed by a dash character `-` and a ISO 3166-1 alpha-2 code.  For
+    A locale is expressed by an ISO 639-3 alpha-3 code element, optionally
+    followed by a dash character `-` and an ISO 3166-1 alpha-2 code.  For
     example: `eng` (which denotes a standard English), `eng-US` (which
     denotes an American English).
     """
@@ -207,14 +207,14 @@ class Locale(BaseModel):
     @staticmethod
     def compose_locale(language_code: str, country_code: str = None) -> str:
         """
-        Return the string representation of the locale specified with a ISO
+        Return the string representation of the locale specified with an ISO
         639-3 alpha-3 code (or alpha-2 code), optionally followed by a dash
-        character `-` and a ISO 3166-1 alpha-2 code
+        character `-` and an ISO 3166-1 alpha-2 code
 
 
-        :param language_code: A ISO 639-3 alpha-3 code (or alpha-2 code).
+        :param language_code: An ISO 639-3 alpha-3 code (or alpha-2 code).
 
-        :param country_code: A ISO 3166-1 alpha-2 code.
+        :param country_code: An ISO 3166-1 alpha-2 code.
 
 
         :return: A string representing a locale.
@@ -229,8 +229,8 @@ class Locale(BaseModel):
         and a country codes
 
 
-        :param locale: A ISO 639-3 alpha-3 code (or alpha-2 code), optionally
-            followed by a dash character `-` and a ISO 3166-1 alpha-2 code.
+        :param locale: An ISO 639-3 alpha-3 code (or alpha-2 code), optionally
+            followed by a dash character `-` and an ISO 3166-1 alpha-2 code.
             If `None` passed, the function returns the default locale, i.e.,
             standard English `('eng', None)`.
 
@@ -240,8 +240,8 @@ class Locale(BaseModel):
 
 
         :return: A tuple `(language_code, country_code)`, where the first code
-            represents a ISO 639-3 alpha-3 code (or alpha-2 code), and the
-            second code a ISO 3166-1 alpha-2 code.
+            represents an ISO 639-3 alpha-3 code (or alpha-2 code), and the
+            second code an ISO 3166-1 alpha-2 code.
 
 
         :raise ValueError: If the input is ``None``.
@@ -270,16 +270,16 @@ class Locale(BaseModel):
         return (locale_language_code, locale_country_code.upper()) if language_code is None \
             else (language_code, None)
 
-    @staticmethod
-    def from_string(locale: str, strict: bool = True) -> Locale | None:
+    @classmethod
+    def from_string(cls, locale: str, strict: bool = True) -> Locale | None:
         """
         Return an object `Locale` corresponding to the string representation
         of a locale.
 
 
-        :param locale: A string representation of a locale, i.e., a ISO 639-3
+        :param locale: A string representation of a locale, i.e., an ISO 639-3
            alpha-3 code (or alpha-2 code), optionally followed by a dash
-           character `-` and a ISO 3166-1 alpha-2 code.
+           character `-` and an ISO 3166-1 alpha-2 code.
 
         :param strict: Indicate whether the string representation of a locale
             has to be strictly compliant with RFC 4646, or whether a Java-style
@@ -294,7 +294,7 @@ class Locale(BaseModel):
         if not locale:
             return None
 
-        language_code, country_code = Locale.decompose_locale(locale, strict)
+        language_code, country_code = cls.decompose_locale(locale, strict=strict)
 
         return Locale(
             language_code=language_code,
@@ -349,9 +349,9 @@ class Locale(BaseModel):
         locale.
 
 
-        :return: A string representation of the locale, i.e., a ISO 639-3
+        :return: A string representation of the locale, i.e., an ISO 639-3
             alpha-3 code (or alpha-2 code), optionally followed by a dash
-            character `-` and a ISO 3166-1 alpha-2 code.
+            character `-` and an ISO 3166-1 alpha-2 code.
         """
         return self.to_string()
 
@@ -366,8 +366,8 @@ class Locale(BaseModel):
 
 
         :return: A string representation of this locale compatible with HTTP
-            request, i.e., a ISO 639-3 alpha-2, optionally followed by a dash
-            character `-` and a ISO 3166-1 alpha-2 code.
+            request, i.e., an ISO 639-3 alpha-2, optionally followed by a dash
+            character `-` and an ISO 3166-1 alpha-2 code.
         """
         return self.language_code[:2] if self.country_code is None \
             else f'{self.language_code[:2]}-{self.country_code}'
@@ -377,9 +377,9 @@ class Locale(BaseModel):
         Return a string representation of this object `Locale`.
 
 
-        :return: A string representation of the locale, i.e., a ISO 639-3
+        :return: A string representation of the locale, i.e., an ISO 639-3
             alpha-3 code (or alpha-2 code), optionally followed by a dash
-            character `-` and a ISO 3166-1 alpha-2 code.
+            character `-` and an ISO 3166-1 alpha-2 code.
         """
         return Locale.compose_locale(self.language_code, self.country_code)
 
@@ -399,7 +399,7 @@ class Locale(BaseModel):
 
         :raise ValueError: If the given country code not `None` and is invalid.
         """
-        if string_utils.is_empty(value):
+        if any_utils.is_empty_or_none(value):
             return None
 
         value = value.upper()
@@ -425,7 +425,7 @@ class Locale(BaseModel):
 
         :raise ValueError: If the given language code is invalid.
         """
-        if string_utils.is_empty(value):
+        if any_utils.is_empty_or_none(value):
             raise ValueError("Expecting a non-empty string for language code.")
 
         value = value.lower()
@@ -434,4 +434,4 @@ class Locale(BaseModel):
         return cls.__to_iso_639_3(value)
 
 
-DEFAULT_LOCALE = Locale(language_code='eng')
+DEFAULT_LOCALE = Locale(language_code='eng', country_code=None)

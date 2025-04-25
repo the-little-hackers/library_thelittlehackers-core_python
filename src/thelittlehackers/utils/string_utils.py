@@ -38,9 +38,9 @@ import normality
 
 from thelittlehackers.constant import regex
 from thelittlehackers.constant.data_type import DataType
+from thelittlehackers.model.locale import Locale
 from thelittlehackers.model.version import Version
 from thelittlehackers.utils import any_utils
-from thelittlehackers.utils import module_utils
 from thelittlehackers.utils.any_utils import is_empty_or_none
 
 
@@ -506,9 +506,11 @@ def string_to_locale(
     from thelittlehackers.model.locale import MalformedLocaleException  # Declare here To avoid circular dependency.
 
     try:
-        locale = None if any_utils.is_empty_or_none(value) \
-            else value if isinstance(value, Locale) \
+        locale = (
+            None if any_utils.is_empty_or_none(value)
+            else value if isinstance(value, Locale)
             else Locale.from_string(value, strict=strict)
+        )
     except MalformedLocaleException as exception:
         if strict:
             raise exception
@@ -789,7 +791,3 @@ DATA_TYPE_CONVERTERS: {DataType, Callable} = {
     DataType.UUID: string_to_uuid,
     DataType.VERSION: string_to_version,
 }
-
-
-# Dynamically load the class `Locale` to avoid circular import.
-Locale = module_utils.load_class('thelittlehackers.model.locale.Locale')
