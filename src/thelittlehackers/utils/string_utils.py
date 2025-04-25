@@ -38,7 +38,6 @@ import normality
 
 from thelittlehackers.constant import regex
 from thelittlehackers.constant.data_type import DataType
-from thelittlehackers.model.locale import MalformedLocaleException
 from thelittlehackers.model.version import Version
 from thelittlehackers.utils import any_utils
 from thelittlehackers.utils import module_utils
@@ -504,6 +503,8 @@ def string_to_locale(
     :raise MalformedLocaleException: If ``locale`` does not represent a
         valid locale.
     """
+    from thelittlehackers.model.locale import MalformedLocaleException  # Declare here To avoid circular dependency.
+
     try:
         locale = None if any_utils.is_empty_or_none(value) \
             else value if isinstance(value, Locale) \
