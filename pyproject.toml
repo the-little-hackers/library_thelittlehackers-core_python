@@ -19,7 +19,7 @@ version = "1.0.14"
 [tool.poetry.dependencies]
 normality = "^2.5.0"
 pydantic = "^2.11.3"
-python = "^3.12"
+python = ">=3.12"
 python-dateutil = "^2.9.0.post0"
 toml = "^0.10.2"
 
