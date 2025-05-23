@@ -29,13 +29,10 @@ from pathlib import Path
 # The default number of bytes to read when processing a file.
 DEFAULT_READ_CHUNK_SIZE = 8192
 
-# The default number of subdirectories to generate.
-DEFAULT_DIRECTORY_DEPTH = 8
-
 
 def calculate_file_size_and_checksum(
         file: BytesIO,
-        read_chunk_size: int = DEFAULT_READ_CHUNK_SIZE
+        read_chunk_size: int
 ) -> tuple[int, str]:
     """
     Calculate the size and SHA-256 checksum of an uploaded file.
@@ -73,7 +70,7 @@ def calculate_file_size_and_checksum(
 
 def generate_hierarchical_path(
         file_name: Path,
-        directory_depth: int = DEFAULT_DIRECTORY_DEPTH
+        directory_depth: int
 ) -> Path:
     """
     Return a pathname built from the specified number of subdirectories,
@@ -105,7 +102,7 @@ def generate_hierarchical_path(
 
 def generate_hierarchical_file_path(
         file_name: Path,
-        directory_depth: int = DEFAULT_DIRECTORY_DEPTH
+        directory_depth: int
 ) -> Path:
     """
     Generate a file path with a structured subdirectory hierarchy based on
