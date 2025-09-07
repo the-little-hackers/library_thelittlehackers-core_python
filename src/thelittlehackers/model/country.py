@@ -46,7 +46,7 @@ class Country(BaseModel):
     A country is expressed by a ISO 3166-1 alpha-2 code.  For example, "US"
     represents the United States of America.
     """
-    country_code: Optional[str] = Field(
+    country_code: str = Field(
         None,
         description="An ISO 3166-1 alpha-2 code.",
         frozen=True
@@ -88,13 +88,13 @@ class Country(BaseModel):
         if not isinstance(other, Country):
             return False
 
-        return self.__country_code == other.country_code
+        return self.country_code == other.country_code
 
     def __hash__(self) -> int:
         if not hasattr(self, '__hash'):
             self.__hash = sum([
                 (ord(c) - ord('a') if ord(c) >= ord('a') else ord(c) - ord('A')) * 52**i
-                for i, c in enumerate(self.__country_code)
+                for i, c in enumerate(self.country_code)
             ])
 
         return self.__hash
@@ -143,7 +143,7 @@ class Country(BaseModel):
         :return: A string representation of a country, i.e., a ISO 3166-1
             alpha-2 code.
         """
-        return self.__country_code
+        return self.country_code
 
     @field_validator('country_code', mode='before')
     @classmethod

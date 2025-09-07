@@ -37,7 +37,7 @@ name = "thelittlehackers-core"
 packages = [{include = "thelittlehackers", from = "src"}]
 readme = "README.md"
 repository = "https://github.com/the-little-hackers/library_core_python"
-version = "1.0.15"
+version = "1.0.16"
 
 [tool.poetry.dependencies]
 normality = "^2.5.0"
