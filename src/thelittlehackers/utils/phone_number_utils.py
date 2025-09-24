@@ -66,9 +66,35 @@ def format_phone_number_to_e164(
     :raise InvalidPhoneNumberException: If the input string is not a valid
         phone number.
     """
+    # Parse the phone number (no region hint, must be international).
     try:
-        phone_number_object = phonenumbers.parse(phone_number, country.to_string())
+        phone_number_object = phonenumbers.parse(phone_number, region=None)
+        return phonenumbers.format_number(phone_number_object, phonenumbers.PhoneNumberFormat.E164)
+    except NumberParseException:  # The phone number is not international.
+        pass
+
+    # Format the national phone number into an international phone number.
+    try:
+        phone_number_object = phonenumbers.parse(phone_number, region=country.to_string())
         return phonenumbers.format_number(phone_number_object, phonenumbers.PhoneNumberFormat.E164)
     except NumberParseException as exception:
         logger.error(exception)
         raise InvalidPhoneNumberException(phone_number)
+
+
+def is_strict_international_format(phone_number: str) -> bool:
+    """
+    Check if a phone number string is in a valid international format.
+
+
+    :param phone_number: The phone number string to validate.
+
+
+    :return: ``True`` if the phone number is in international format,
+        ``False`` otherwise.
+    """
+    try:
+        phonenumbers.parse(phone_number, region=None)
+        return True
+    except phonenumbers.NumberParseException:
+        return False
