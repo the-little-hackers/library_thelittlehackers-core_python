@@ -196,7 +196,7 @@ class Contact(BaseModel):
             )
 
         if not CONTACT_NAME_REGEX_MAPPING[property_name].match(property_value):
-            raise cls.InvalidContactException(
+            raise InvalidContactException(
                 f"Invalid value \"{property_value}\" for contact type \"{property_name}\". "
                 f"Expected format does not match."
             )
