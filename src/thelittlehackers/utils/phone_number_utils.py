@@ -66,8 +66,8 @@ def format_phone_number_to_e164(
     :raise InvalidPhoneNumberException: If the input string is not a valid
         phone number.
     """
-    phone_number_object = phonenumbers.parse(phone_number, country.to_string())
     try:
+        phone_number_object = phonenumbers.parse(phone_number, country.to_string())
         return phonenumbers.format_number(phone_number_object, phonenumbers.PhoneNumberFormat.E164)
     except NumberParseException:
         raise InvalidPhoneNumberException(phone_number)
