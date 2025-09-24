@@ -17,8 +17,8 @@ from enum import StrEnum
 from enum import auto
 
 import phonenumbers
+from loguru import logger
 from phonenumbers.phonenumberutil import NumberParseException
-from tendkid.exceptions import TendKidBaseException
 from thelittlehackers.model.country import Country
 
 
@@ -26,7 +26,7 @@ class PhoneNumberUtilsErrorCode(StrEnum):
     INVALID_PHONE_NUMBER = auto()
 
 
-class InvalidPhoneNumberException(TendKidBaseException):
+class InvalidPhoneNumberException(BaseException):
     """
     Exception raised when an invalid phone number is supplied.
     """
@@ -69,5 +69,6 @@ def format_phone_number_to_e164(
     try:
         phone_number_object = phonenumbers.parse(phone_number, country.to_string())
         return phonenumbers.format_number(phone_number_object, phonenumbers.PhoneNumberFormat.E164)
-    except NumberParseException:
+    except NumberParseException as exception:
+        logger.error(exception)
         raise InvalidPhoneNumberException(phone_number)

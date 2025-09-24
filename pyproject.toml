@@ -46,6 +46,7 @@ pydantic = "^2.11.5"
 python = ">=3.12,<4.0"
 python-dateutil = "^2.9.0.post0"
 toml = "^0.10.2"
+loguru = "^0.7.3"
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.8.0"
