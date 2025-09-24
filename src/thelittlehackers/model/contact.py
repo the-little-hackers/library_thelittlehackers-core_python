@@ -145,8 +145,8 @@ class Contact(BaseModel):
         :return: `True` if this contact information corresponds to the
             contact information passed to this function; `False` otherwise.
         """
-        return self.__property_name == other.__property_name \
-            and self.__property_value == other.__property_value
+        return self.property_name == other.property_name \
+            and self.property_value == other.property_value
 
     def __str__(self):
         """
