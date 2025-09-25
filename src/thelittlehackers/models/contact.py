@@ -32,10 +32,10 @@ from pydantic import Field
 from pydantic import ValidationInfo
 from pydantic import field_validator
 
-from thelittlehackers.constant.contact import ContactName
-from thelittlehackers.constant.privacy import Visibility
-from thelittlehackers.constant.regex import REGEX_PATTERN_EMAIL_ADDRESS
-from thelittlehackers.constant.regex import REGEX_PATTERN_PHONE_NUMBER
+from thelittlehackers.constants.contact import ContactName
+from thelittlehackers.constants.privacy import Visibility
+from thelittlehackers.constants.regex import REGEX_PATTERN_EMAIL_ADDRESS
+from thelittlehackers.constants.regex import REGEX_PATTERN_PHONE_NUMBER
 
 
 REGEX_EMAIL_ADDRESS = re.compile(REGEX_PATTERN_EMAIL_ADDRESS)

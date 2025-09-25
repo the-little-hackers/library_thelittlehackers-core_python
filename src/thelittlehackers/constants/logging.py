@@ -22,11 +22,11 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 import logging
-from enum import Enum
+from enum import StrEnum
 from enum import auto
 
 
-class LoggingLevelLiteral(str, Enum):
+class LoggingLevelLiteral(StrEnum):
     CRITICAL = auto()
     ERROR = auto()
     WARNING = auto()
@@ -44,4 +44,4 @@ LOGGING_LEVELS = {
 
 
 # noinspection PyUnresolvedReferences
-LOGGING_LEVEL_LITERAL_STRINGS: list[str] = [level.value for level in LoggingLevelLiteral]
+LOGGING_LEVEL_LITERAL_STRINGS: list[str] = [level for level in LoggingLevelLiteral]

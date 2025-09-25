@@ -19,7 +19,7 @@ from enum import auto
 import phonenumbers
 from loguru import logger
 from phonenumbers.phonenumberutil import NumberParseException
-from thelittlehackers.model.country import Country
+from thelittlehackers.models.country import Country
 
 
 class PhoneNumberUtilsErrorCode(StrEnum):

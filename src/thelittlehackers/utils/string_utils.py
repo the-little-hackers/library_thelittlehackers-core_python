@@ -36,10 +36,10 @@ from uuid import UUID
 
 import normality
 
-from thelittlehackers.constant import regex
-from thelittlehackers.constant.data_type import DataType
-from thelittlehackers.model.locale import Locale
-from thelittlehackers.model.version import Version
+from thelittlehackers.constants import regex
+from thelittlehackers.constants.data_type import DataType
+from thelittlehackers.models.locale import Locale
+from thelittlehackers.models.version import Version
 from thelittlehackers.utils import any_utils
 from thelittlehackers.utils.any_utils import is_empty_or_none
 

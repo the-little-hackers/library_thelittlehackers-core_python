@@ -31,11 +31,12 @@ from pydantic import Field
 from pydantic import field_validator
 from pydantic import model_serializer
 
-from thelittlehackers.constant.locale import ISO_3166_1_ALPHA_2_CODES
-from thelittlehackers.constant.locale import ISO_639_1_CODES
-from thelittlehackers.constant.locale import ISO_639_1_CODES_TO_ISO_639_3_CODES
-from thelittlehackers.constant.locale import ISO_639_3_CODES
+from thelittlehackers.constants.locale import ISO_3166_1_ALPHA_2_CODES
+from thelittlehackers.constants.locale import ISO_639_1_CODES
+from thelittlehackers.constants.locale import ISO_639_1_CODES_TO_ISO_639_3_CODES
+from thelittlehackers.constants.locale import (ISO_639_3_CODES)
 from thelittlehackers.utils import any_utils
+
 
 REGEX_PATTERN_LANGUAGE_CODE = r'[a-z]{2,3}'
 REGEX_PATTERN_COUNTRY_CODE = r'[A-Z]{2}'

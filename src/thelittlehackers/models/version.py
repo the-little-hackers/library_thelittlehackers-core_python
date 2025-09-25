@@ -29,10 +29,8 @@ from os import PathLike
 from typing import ClassVar
 from typing import Optional
 
-
 import toml
 from pydantic import BaseModel
-from pydantic import ConfigDict
 from pydantic import Field
 from pydantic import field_validator
 
@@ -116,8 +114,6 @@ class Version(BaseModel):
         r'(?:-(?P<prerelease>(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?'
         r'(?:\+(?P<buildmetadata>[0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$'
     )
-
-    model_config = ConfigDict(exclude_none=True)
 
     @field_validator('major', 'minor', 'patch')
     @classmethod

@@ -26,8 +26,8 @@ from __future__ import annotations
 import logging
 import sys
 
-from thelittlehackers.constant.logging import LOGGING_LEVELS
-from thelittlehackers.constant.logging import LoggingLevelLiteral
+from thelittlehackers.constants.logging import LOGGING_LEVELS
+from thelittlehackers.constants.logging import LoggingLevelLiteral
 
 
 DEFAULT_LOGGING_FORMATTER = logging.Formatter("%(asctime)s [%(levelname)s] %(message)s")

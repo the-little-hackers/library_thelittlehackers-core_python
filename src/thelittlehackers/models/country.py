@@ -23,13 +23,11 @@
 
 from __future__ import annotations
 
-from typing import Optional
-
 from pydantic import BaseModel
 from pydantic import Field
 from pydantic import field_validator
 
-from thelittlehackers.constant.locale import ISO_3166_1_ALPHA_2_CODES
+from thelittlehackers.constants.locale import ISO_3166_1_ALPHA_2_CODES
 from thelittlehackers.utils import string_utils
 
 
