@@ -174,6 +174,7 @@ def string_to_date(
     except ValueError as error:
         if strict:
             raise error
+        date = None
 
     if date is None:
         if strict:
@@ -212,6 +213,7 @@ def string_to_decimal(
     except ValueError as error:
         if strict:
             raise error
+        decimal = None
 
     if decimal is None:
         if strict:
@@ -313,6 +315,7 @@ def string_to_enumeration_member(
     except ValueError as error:
         if strict:
             raise error
+        enumeration_member = None
 
     if enumeration_member is None:
         if default_value:
@@ -356,6 +359,7 @@ def string_to_integer(
     except ValueError as error:
         if strict:
             raise error
+        integer = None
 
     if integer is None:
         if strict:
@@ -503,7 +507,7 @@ def string_to_locale(
     :raise MalformedLocaleException: If ``locale`` does not represent a
         valid locale.
     """
-    from thelittlehackers.model.locale import MalformedLocaleException  # Declare here To avoid circular dependency.
+    from thelittlehackers.models.locale import MalformedLocaleException  # Declare here To avoid circular dependency.
 
     try:
         locale = (
@@ -514,6 +518,7 @@ def string_to_locale(
     except MalformedLocaleException as exception:
         if strict:
             raise exception
+        locale = None
 
     if locale is None:
         if strict:
@@ -641,6 +646,7 @@ def string_to_time(
         except ValueError as error:
             if strict:
                 raise error
+            time = None
 
     if time is None:
         if strict:
@@ -682,6 +688,7 @@ def string_to_timestamp(
     except ValueError as error:
         if strict:
             raise error
+        timestamp = None
 
     if timestamp is None:
         if strict:
@@ -721,6 +728,7 @@ def string_to_version(
     except ValueError as error:
         if strict:
             raise error
+        version = None
 
     if version is None:
         if strict:
@@ -766,6 +774,7 @@ def string_to_uuid(
     except ValueError as error:
         if strict:
             raise error
+        uuid = None
 
     if uuid is None:
         if strict:
