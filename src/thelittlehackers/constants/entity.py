@@ -24,14 +24,43 @@
 from enum import StrEnum
 from enum import auto
 
+class EntityState(StrEnum):
+    """
+    Define the standard lifecycle states of a persistent entity stored in
+    the primary data store.
 
-class EntityStatus(StrEnum):
+    These states are used internally to control entity behavior and to
+    synchronize data with external systems (e.g., mobile client
+    applications).
     """
-    Enumeration of standard statuses for a persistent object stored in a
-    primary storage system.  These statuses are used to reference and
-    synchronize objects with remote storage systems, such as client
-    applications on mobile devices.
-    """
+    # Why "State" instead of "Status"?
+    #
+    # We intentionally use the term "state" rather than "status" to
+    # emphasize that these values represent internal lifecycle conditions
+    # that may change over time as part of an entity’s workflow.
+    #
+    # - **State**: Represent the internal condition or lifecycle phase of
+    #   an entity.  A state directly influences behavior and business logic,
+    #   and typically transitions over time.
+    #
+    #   Use "state" when:
+    #   - Tracking internal workflow progression (e.g., draft → pending →
+    #     approved).
+    #   - Representing dynamic lifecycle phases.
+    #   - Controlling system behavior based on entity condition.
+    #
+    # - **Status**: Represent a higher-level or externally communicated
+    #   condition, often reflecting the outcome of an action or the overall
+    #   health of an entity.
+    #
+    #   Use "status" when:
+    #   - Reporting the result of an operation (e.g., success, failure).
+    #   - Communicating a summarized condition to external systems.
+    #   - Exposing health or outcome information in APIs or UI.
+    #
+    # In short:
+    # - **State** = internal lifecycle and behavioral control.
+    # - **Status** = external outcome or summary condition.
     APPROVED = auto()
     DELETED = auto()
     DISABLED = auto()
