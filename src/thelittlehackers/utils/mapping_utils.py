@@ -28,7 +28,7 @@ from typing import Any
 import unidecode
 
 
-def normalize_names_codes_mapping(names_codes_mapping: dict[str, Any]) -> dict[str, Any]:
+def normalize_mapping_keys(names_codes_mapping: dict[str, Any]) -> dict[str, Any]:
     """
     Normalize the keys of a names-to-codes mapping.
 
@@ -40,7 +40,7 @@ def normalize_names_codes_mapping(names_codes_mapping: dict[str, Any]) -> dict[s
 
     ```python
     >>> input_mapping = {"Français": "fr", "English": "en", "Español": "es"}
-    >>> normalized_mapping = normalize_names_codes_mapping(input_mapping)
+    >>> normalized_mapping = normalize_mapping_keys(input_mapping)
     >>> print(normalized_mapping)
     {"francais": "fr", "english": "en", "espanol": "es"}
     ```
