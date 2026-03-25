@@ -23,6 +23,7 @@
 
 from __future__ import annotations
 
+import json
 import re
 from typing import Optional
 
@@ -433,6 +434,33 @@ class Locale(BaseModel):
         cls.assert_language_code(value, strict=True)
 
         return cls.__to_iso_639_3(value)
+
+
+class LocaleJSONEncoder(json.JSONEncoder):
+    """
+    Custom JSON encoder for serializing ``Locale`` objects.
+
+    This encoder extends Python’s built-in :class:`json.JSONEncoder` to
+    support serialization of ``Locale`` instances.   When a ``Locale``
+    object is encountered, it is converted to its string representation
+    (e.g., ``"fra"`` or ``"eng-US"``) using its :meth:`to_string` method.
+
+    This allows dictionaries or data structures containing ``Locale``
+    instances to be serialized using :func:`json.dumps` without raising
+    ``TypeError``.
+
+    All other object types are delegated to the default JSON encoding
+    behavior.
+
+    Example::
+
+        json.dumps(data, cls=LocaleJSONEncoder)
+    """
+    def default(self, obj):
+        if isinstance(obj, Locale):
+            return obj.to_string()
+
+        return super().default(obj)
 
 
 DEFAULT_LOCALE = Locale(language_code='eng', country_code=None)

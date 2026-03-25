@@ -23,6 +23,8 @@
 
 from __future__ import annotations
 
+import json
+
 from pydantic import BaseModel
 from pydantic import Field
 from pydantic import field_validator
@@ -166,3 +168,31 @@ class Country(BaseModel):
         cls.assert_country_code(value, strict=True)
 
         return value
+
+
+class CountryJSONEncoder(json.JSONEncoder):
+    """
+    Custom JSON encoder for serializing ``Country`` objects.
+
+    This encoder extends Python’s built-in :class:`json.JSONEncoder` to
+    support serialization of ``Country`` instances.   When a ``Country``
+    object is encountered, it is converted to its string representation
+    (e.g., ``"FR"`` or ``"US"``) using its :meth:`to_string` method.
+
+    This allows dictionaries or data structures containing ``Country``
+    instances to be serialized using :func:`json.dumps` without raising
+    ``TypeError``.
+
+    All other object types are delegated to the default JSON encoding
+    behavior.
+
+    Example::
+
+        json.dumps(data, cls=CountryJSONEncoder)
+    """
+    def default(self, obj):
+        if isinstance(obj, Country):
+            return obj.to_string()
+
+        return super().default(obj)
+
