@@ -215,7 +215,7 @@ class Version(BaseModel):
         if not match:
             raise ValueError(f"Invalid version string: {value}")
 
-        major, minor, patch = int(match.group('major')), int(match.group('minor')), int(match.group('patch'))
+        major, minor, patch = int(match.group('major')), int(match.group('minor') or 0), int(match.group('patch') or 0)
         prerelease = match.group('prerelease')
         build_metadata = match.group('buildmetadata')
 
