@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.3] - 2026-04-10
+### Add
+- Support for parsing version strings with missing minor and/or patch components (e.g., 1, 1.2)
+### Changed
+- Update semantic versioning regular expression to accept: major, major.minor, major.minor.patch
+- Missing minor and patch components now default to 0 when constructing a Version instance.
+### Fixed
+- Prevent parsing errors when handling version strings without explicit minor or patch values.
+
 ## [1.2.2] - 2026-03-25
 ### Added
 - Add JSON serializers for classes `Locale` and `Country`

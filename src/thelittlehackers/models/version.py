@@ -70,37 +70,47 @@ class Version(BaseModel):
     * PEP 386 - Changing the version comparison module in Distutils
       (http://www.python.org/dev/peps/pep-0386/)
     """
-    major: int = Field(..., ge=0, description="Major version number.")
-    minor: int = Field(0, ge=0, description="Minor version number.")
-    patch: int = Field(0, ge=0, description="Patch version number.")
+    major: int = Field(
+        ...,
+        description="Major version number.",
+        ge=0
+    )
+
+    minor: Optional[int] = Field(
+        default=0,
+        description="Minor version number.",
+        ge=0
+    )
+    patch: Optional[int] = Field(
+        default=0,
+        description="Patch version number.",
+        ge=0
+    )
 
     prerelease: Optional[str] = Field(
         None,
-        description="Pre-release version."
-                    ""
-                    "A pre-release version indicates that the version is unstable and might "
-                    "not satisfy the intended compatibility requirements as denoted by its "
-                    "associated normal version."
+        description=(
+            "Pre-release version. Indicate that the version is unstable and might "
+            "not satisfy the intended compatibility requirements as denoted by its "
+            "associated normal version."
+        )
     )
 
     build_metadata: Optional[str] = Field(
         None,
-        description="Build metadata."
-                    ""
-                    "Build metadata is intended to track build maturity when preparing an "
-                    "application for a public release of any kind, including pre-releases."
-                    ""
-                    "It can sometimes be helpful to include information such as:"
-                    ""
-                    "- The exact git hash of the commit used to produce the current build."
-                    ""
-                    "- The release channel of the build.  For example, is this build a very "
-                    "experimental and potentially broken \"nightly\" release, a semi-stable "
-                    "\"beta\" release containing a few new experimental features, or a "
-                    "robust and well-tested \"stable\" release?"
-                    ""
-                    "- Whether the project as a whole is alpha-level quality (the entire "
-                    "project is pretty new and experimental)."
+        description=(
+            "Build metadata.  Intended to track build maturity when preparing an "
+            "application for a public release of any kind, including pre-releases."
+            ""
+            "It can sometimes be helpful to include information such as:"
+            "- The exact git hash of the commit used to produce the current build."
+            "- The release channel of the build.  For example, is this build a very "
+            "experimental and potentially broken \"nightly\" release, a semi-stable "
+            "\"beta\" release containing a few new experimental features, or a "
+            "robust and well-tested \"stable\" release?"
+            "- Whether the project as a whole is alpha-level quality (the entire "
+            "project is pretty new and experimental)."
+        )
     )
 
     # Name of the file in which the version of an application is commonly
@@ -110,7 +120,10 @@ class Version(BaseModel):
     # Regular expression that matches the string representation of a version
     # denoted using a standard tuple of integers ``major.minor.patch``.
     REGEX_PATTERN_SEMANTIC_VERSION: ClassVar[re.Pattern] = re.compile(
-        r'^(?P<major>0|[1-9]\d*)\.(?P<minor>0|[1-9]\d*)\.(?P<patch>0|[1-9]\d*)'
+        r'^(?P<major>0|[1-9]\d*)'
+        r'(?:\.(?P<minor>0|[1-9]\d*)'
+        r'(?:\.(?P<patch>0|[1-9]\d*))?'
+        r')?'
         r'(?:-(?P<prerelease>(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?'
         r'(?:\+(?P<buildmetadata>[0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$'
     )
@@ -205,23 +218,30 @@ class Version(BaseModel):
         major, minor, patch = int(match.group('major')), int(match.group('minor')), int(match.group('patch'))
         prerelease = match.group('prerelease')
         build_metadata = match.group('buildmetadata')
-        return cls(major=major, minor=minor, patch=patch, prerelease=prerelease, build_metadata=build_metadata)
+
+        version = cls(
+            major=major,
+            minor=minor,
+            patch=patch,
+            prerelease=prerelease,
+            build_metadata=build_metadata
+        )
+
+        return version
 
     def __eq__(self, other: Version) -> bool:
-        return (self.major, self.minor, self.patch) == (other.major, other.minor, other.patch)
+        return (self.major, self.minor or 0, self.patch or 0) == (other.major, other.minor or 0, other.patch or 0)
 
     def __gt__(self, other: Version) -> bool:
-        return (self.major, self.minor, self.patch) > (other.major, other.minor, other.patch)
+        return (self.major, self.minor or 0, self.patch or 0) > (other.major, other.minor or 0, other.patch or 0)
 
     def __lt__(self, other: Version) -> bool:
-        return (self.major, self.minor, self.patch) < (other.major, other.minor, other.patch)
+        return (self.major, self.minor or 0, self.patch or 0) < (other.major, other.minor or 0, other.patch or 0)
 
     def __str__(self) -> str:
-        version_str = f"{self.major}.{self.minor}.{self.patch}"
+        version_str = f"{self.major}.{self.minor or 0}.{self.patch or 0}"
         if self.prerelease:
             version_str += f"-{self.prerelease}"
         if self.build_metadata:
             version_str += f"+{self.build_metadata}"
         return version_str
-#
-
