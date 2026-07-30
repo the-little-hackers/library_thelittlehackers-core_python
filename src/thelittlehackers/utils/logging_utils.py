@@ -35,7 +35,7 @@ DEFAULT_LOG_LEVEL = LogLevelLiteral.INFO
 
 
 def get_console_handler(
-        logging_formatter: logging.Formatter | None = DEFAULT_LOGGING_FORMATTER
+        log_formatter: logging.Formatter | None = DEFAULT_LOGGING_FORMATTER
 ) -> logging.StreamHandler:
     """
     Create and return a console logging handler that outputs to the
@@ -45,7 +45,7 @@ def get_console_handler(
     instance or the default formatter if none is specified.
 
 
-    :param logging_formatter: The ``Formatter`` instance to use for
+    :param log_formatter: The ``Formatter`` instance to use for
         formatting log records.  Defaults to ``DEFAULT_LOGGING_FORMATTER``.
 
 
@@ -53,12 +53,12 @@ def get_console_handler(
         records to the standard output.
     """
     console_handler = logging.StreamHandler(sys.stdout)
-    console_handler.setFormatter(logging_formatter)
+    console_handler.setFormatter(log_formatter)
     return console_handler
 
 
 def set_up_logger(
-        logging_formatter: logging.Formatter | None = DEFAULT_LOGGING_FORMATTER,
+        log_formatter: logging.Formatter | None = DEFAULT_LOGGING_FORMATTER,
         log_level: LogLevelLiteral | None = DEFAULT_LOG_LEVEL,
         logger_name: str = None
 ) -> logging.Logger:
@@ -71,7 +71,7 @@ def set_up_logger(
     to the root logger.
 
 
-    :param logging_formatter: An instance of ``Formatter`` used to format
+    :param log_formatter: An instance of ``Formatter`` used to format
         log records.  Defaults to ``DEFAULT_LOGGING_FORMATTER``.
 
     :param log_level: The logging threshold for the logger.  Log
@@ -89,6 +89,6 @@ def set_up_logger(
     """
     logger = logging.getLogger(logger_name)
     logger.setLevel(LOG_LEVELS[log_level or DEFAULT_LOG_LEVEL])
-    logger.addHandler(get_console_handler(logging_formatter=logging_formatter))
+    logger.addHandler(get_console_handler(log_formatter=log_formatter))
     logger.propagate = False
     return logger
