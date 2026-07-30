@@ -267,7 +267,7 @@ def string_to_email_address(
 
 def string_to_enumeration_member(
         value: str | Enum | None,
-        enumeration: Type[Enum],
+        enumeration: Type[Enum] = None,
         strict: bool = True,
         default_value: Enum | None = None
 ) -> Enum | None:
