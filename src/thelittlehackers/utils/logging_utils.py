@@ -26,12 +26,12 @@ from __future__ import annotations
 import logging
 import sys
 
-from thelittlehackers.constants.logging import LOGGING_LEVELS
-from thelittlehackers.constants.logging import LoggingLevelLiteral
+from thelittlehackers.constants.logging import LOG_LEVELS
+from thelittlehackers.constants.logging import LogLevelLiteral
 
 
 DEFAULT_LOGGING_FORMATTER = logging.Formatter("%(asctime)s [%(levelname)s] %(message)s")
-DEFAULT_LOGGING_LEVEL = LoggingLevelLiteral.INFO
+DEFAULT_LOG_LEVEL = LogLevelLiteral.INFO
 
 
 def get_console_handler(
@@ -59,7 +59,7 @@ def get_console_handler(
 
 def set_up_logger(
         logging_formatter: logging.Formatter | None = DEFAULT_LOGGING_FORMATTER,
-        logging_level: LoggingLevelLiteral | None = DEFAULT_LOGGING_LEVEL,
+        log_level: LogLevelLiteral | None = DEFAULT_LOG_LEVEL,
         logger_name: str = None
 ) -> logging.Logger:
     """
@@ -74,12 +74,12 @@ def set_up_logger(
     :param logging_formatter: An instance of ``Formatter`` used to format
         log records.  Defaults to ``DEFAULT_LOGGING_FORMATTER``.
 
-    :param logging_level: The logging threshold for the logger.  Log
+    :param log_level: The logging threshold for the logger.  Log
         messages with a severity lower than this level will be ignored.
         Messages at this level or higher will be emitted by the configured
         handler(s), unless a handler's level is set to a higher severity
-        than the specified ``logging_level``.  Defaults to `
-        `DEFAULT_LOGGING_LEVEL``.
+        than the specified ``log_level``.  Defaults to `
+        `DEFAULT_LOG_LEVEL``.
 
     :param logger_name: The name of the logger to configure.  If ``None``,
         the handler will be attached to the root logger.
@@ -88,7 +88,7 @@ def set_up_logger(
     :return: A configured ``Logger`` instance.
     """
     logger = logging.getLogger(logger_name)
-    logger.setLevel(LOGGING_LEVELS[logging_level or DEFAULT_LOGGING_LEVEL])
+    logger.setLevel(LOG_LEVELS[log_level or DEFAULT_LOG_LEVEL])
     logger.addHandler(get_console_handler(logging_formatter=logging_formatter))
     logger.propagate = False
     return logger
