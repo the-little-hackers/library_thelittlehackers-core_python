@@ -26,7 +26,7 @@ from enum import StrEnum
 from enum import auto
 
 
-class LoggingLevelLiteral(StrEnum):
+class LogLevelLiteral(StrEnum):
     CRITICAL = auto()
     ERROR = auto()
     WARNING = auto()
@@ -34,14 +34,14 @@ class LoggingLevelLiteral(StrEnum):
     DEBUG = auto()
 
 
-LOGGING_LEVELS = {
-    LoggingLevelLiteral.CRITICAL: logging.CRITICAL,
-    LoggingLevelLiteral.ERROR: logging.ERROR,
-    LoggingLevelLiteral.WARNING: logging.WARNING,
-    LoggingLevelLiteral.INFO: logging.INFO,
-    LoggingLevelLiteral.DEBUG: logging.DEBUG,
+LOG_LEVELS = {
+    LogLevelLiteral.CRITICAL: logging.CRITICAL,
+    LogLevelLiteral.ERROR: logging.ERROR,
+    LogLevelLiteral.WARNING: logging.WARNING,
+    LogLevelLiteral.INFO: logging.INFO,
+    LogLevelLiteral.DEBUG: logging.DEBUG,
 }
 
 
 # noinspection PyUnresolvedReferences
-LOGGING_LEVEL_LITERAL_STRINGS: list[str] = [level for level in LoggingLevelLiteral]
+LOG_LEVEL_LITERAL_STRINGS: list[str] = [level for level in LogLevelLiteral]
