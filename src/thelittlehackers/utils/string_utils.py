@@ -301,17 +301,26 @@ def string_to_enumeration_member(
     :raise ValueError: If ``value`` is a string that does not match any
         member of ``enumeration`` and ``strict`` is ``True``.
     """
+    if not isinstance(enumeration, type):
+        raise ValueError(
+            f"The argument 'enumeration' must be an Enum class, got "
+            f"{enumeration!r} ({type(enumeration).__name__})"
+        )
+
     if not issubclass(enumeration, Enum):
         raise ValueError(
-            "The argument \"enumeration\" must be a subclass of Enum.  Received "
-            f"\"{enumeration.__name__}\" of class \"{enumeration.__class__.__name__}\" "
+            "The argument 'enumeration' must be a Enum subclass.  Got "
+            f"'{enumeration!r}' of class '{type(enumeration).__name__}' "
             f"instead."
         )
 
     try:
-        enumeration_member = None if any_utils.is_empty_or_none(value) \
-            else value if value in enumeration \
-            else enumeration(value)
+        if isinstance(value, enumeration):
+            enumeration_member = value
+        elif any_utils.is_empty_or_none(value):
+            enumeration_member = None
+        else:
+            enumeration_member = enumeration(value)
     except ValueError as error:
         if strict:
             raise error
