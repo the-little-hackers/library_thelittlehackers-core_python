@@ -27,11 +27,10 @@ import datetime
 import dateutil.parser
 import re
 import string
-from enum import Enum
+from enum import Enum, StrEnum
 from re import Pattern
-from typing import Callable
-from typing import List
-from typing import Type
+from typing import Callable, cast, Any, LiteralString
+from typing import TypeVar
 from uuid import UUID
 
 import normality
@@ -47,6 +46,8 @@ from thelittlehackers.utils.any_utils import is_empty_or_none
 REGEX_EMAIL_ADDRESS: Pattern[str] = re.compile(regex.REGEX_PATTERN_EMAIL_ADDRESS)
 REGEX_IPV4: Pattern[str] = re.compile(regex.REGEX_PATTERN_IPV4)
 REGEX_MAC_ADDRESS: Pattern[str] = re.compile(regex.REGEX_PATTERN_MAC_ADDRESS)
+
+E = TypeVar('E', bound=StrEnum)
 
 
 def is_empty(value: str) -> bool:
@@ -171,9 +172,9 @@ def string_to_date(
         date = None if any_utils.is_empty_or_none(value) \
             else value if isinstance(value, datetime.date) \
             else dateutil.parser.parse(value).date()
-    except ValueError as error:
+    except ValueError:
         if strict:
-            raise error
+            raise
         date = None
 
     if date is None:
@@ -210,9 +211,9 @@ def string_to_decimal(
         decimal = None if any_utils.is_empty_or_none(value) \
             else value if isinstance(value, float) \
             else float(value)
-    except ValueError as error:
+    except ValueError:
         if strict:
-            raise error
+            raise
         decimal = None
 
     if decimal is None:
@@ -266,19 +267,19 @@ def string_to_email_address(
 
 
 def string_to_enumeration_member(
-        value: str | Enum | None,
-        enumeration: Type[Enum] = None,
+        value: str | E | None,
+        enumeration: type[E],
+        *,
         strict: bool = True,
-        default_value: Enum | None = None
-) -> Enum | None:
+        default_value: str | E | None = None,
+) -> E | None:
     """
     Convert a string representation of an enumeration member to its
     corresponding enumeration member.
 
 
-    :param value: The input value to convert.  It can be a string
-        representing the name of an enumeration member, an existing
-        enumeration member, or ``None``.
+    :param value: The name of an enumeration member, or its value, or
+        ``None``.
 
     :param enumeration: The enumeration class to which the value should
         belong.
@@ -302,40 +303,36 @@ def string_to_enumeration_member(
         member of ``enumeration`` and ``strict`` is ``True``.
     """
     if not isinstance(enumeration, type):
-        raise ValueError(
-            f"The argument 'enumeration' must be an Enum class, got "
-            f"{enumeration!r} ({type(enumeration).__name__})"
-        )
+        raise TypeError(f"'enumeration' must be an StrEnum class, got {enumeration!r}")
 
     if not issubclass(enumeration, Enum):
-        raise ValueError(
-            "The argument 'enumeration' must be a Enum subclass.  Got "
-            f"'{enumeration!r}' of class '{type(enumeration).__name__}' "
-            f"instead."
-        )
+        raise TypeError(f"'enumeration' must be a subclass of Enum, got {enumeration!r}")
+
+    def convert(e: str | E) -> E:
+        """Convert an enumeration member, name, or value to a member."""
+        if isinstance(e, enumeration):
+            return e
+
+        try:
+            return enumeration[e]  # type: ignore  # by member name
+        except KeyError:
+            return enumeration(e)  # by member value
+
+    candidate = (
+        default_value
+        if any_utils.is_empty_or_none(value)
+        else value
+    )
+
+    if candidate is None:
+        return None
 
     try:
-        if isinstance(value, enumeration):
-            enumeration_member = value
-        elif any_utils.is_empty_or_none(value):
-            enumeration_member = None
-        else:
-            enumeration_member = enumeration(value)
-    except ValueError as error:
+        return convert(candidate)
+    except (KeyError, ValueError):
         if strict:
-            raise error
-        enumeration_member = None
-
-    if enumeration_member is None:
-        if default_value:
-            enumeration_member = enumeration(default_value)
-        elif strict:
-            raise ValueError(
-                f"The string \"{value}\" does not represent a member of the "
-                f"enumeration \"{enumeration.__name__}\""
-            )
-
-    return enumeration_member
+            raise ValueError(f'"{candidate}" is not a member of {enumeration.__name__}.') from None
+        return None
 
 
 def string_to_integer(
@@ -365,9 +362,9 @@ def string_to_integer(
         integer = None if any_utils.is_empty_or_none(value) \
             else value if isinstance(value, int) \
             else int(value)
-    except ValueError as error:
+    except ValueError:
         if strict:
-            raise error
+            raise
         integer = None
 
     if integer is None:
@@ -439,7 +436,10 @@ def string_to_ipv4(
     return ipv4_address
 
 
-def string_to_keywords(value: str, keyword_minimal_length: int = 1) -> List[str]:
+def string_to_keywords(
+        value: str,
+        keyword_minimal_length: int = 1
+) -> list[str]:
     """
     Convert a string to a list of distinct keywords by removing
     punctuation, reducing whitespace, and converting accented Unicode
@@ -652,9 +652,9 @@ def string_to_time(
     except ValueError:
         try:
             return datetime.datetime.strptime(value, '%H:%M').time()
-        except ValueError as error:
+        except ValueError:
             if strict:
-                raise error
+                raise
             time = None
 
     if time is None:
@@ -694,9 +694,9 @@ def string_to_timestamp(
         timestamp = None if any_utils.is_empty_or_none(value) \
             else value if isinstance(value, datetime.datetime) \
             else dateutil.parser.isoparse(value)
-    except ValueError as error:
+    except ValueError:
         if strict:
-            raise error
+            raise
         timestamp = None
 
     if timestamp is None:
@@ -734,9 +734,9 @@ def string_to_version(
         version = None if any_utils.is_empty_or_none(value) \
             else value if isinstance(value, Version) \
             else Version.from_string(value)
-    except ValueError as error:
+    except ValueError:
         if strict:
-            raise error
+            raise
         version = None
 
     if version is None:
@@ -780,9 +780,9 @@ def string_to_uuid(
         uuid = None if any_utils.is_empty_or_none(value) \
             else value if isinstance(value, UUID) \
             else UUID(value)
-    except ValueError as error:
+    except ValueError:
         if strict:
-            raise error
+            raise
         uuid = None
 
     if uuid is None:
@@ -792,12 +792,12 @@ def string_to_uuid(
     return uuid
 
 
-DATA_TYPE_CONVERTERS: {DataType, Callable} = {
+DATA_TYPE_CONVERTERS: dict[DataType, Callable] = {
     DataType.BOOLEAN: string_to_boolean,
     DataType.DATE: string_to_date,
     DataType.DECIMAL: string_to_decimal,
     # DataType.EMAIL_ADDRESS: __convert_to_email_address,
-    DataType.ENUMERATION: string_to_enumeration_member,
+    DataType.ENUMERATION: lambda value, enumeration, **kwargs: string_to_enumeration_member(value, enumeration, **kwargs),
     DataType.INTEGER: string_to_integer,
     DataType.IPV4: string_to_ipv4,
     # DataType.LIST: __convert_to_list,

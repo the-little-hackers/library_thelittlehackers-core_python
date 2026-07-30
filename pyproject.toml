@@ -41,16 +41,16 @@ version = "1.2.4"
 
 [tool.poetry.dependencies]
 loguru = "^0.7.3"
-normality = "^2.5.0"
-phonenumbers = "^9.0.18"
-pydantic = "^2.12.5"
+normality = "^2.6.1"
+phonenumbers = "^9.0.35"
+pydantic = "^2.13.4"
 python = ">=3.12,<4.0"
-python-dateutil = "^2.9.0.post0"
+python-dateutil = "^2.9.0"
 toml = "^0.10.2"
 unidecode = "^1.4.0"
 
 [tool.poetry.group.dev.dependencies]
-black = "^26.3.1"
+black = "^26.5.1"
 flake8 = "^7.3.0"
 setuptools = ">=83.0.0"
 
