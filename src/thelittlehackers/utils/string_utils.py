@@ -797,7 +797,7 @@ DATA_TYPE_CONVERTERS: dict[DataType, Callable] = {
     DataType.DATE: string_to_date,
     DataType.DECIMAL: string_to_decimal,
     # DataType.EMAIL_ADDRESS: __convert_to_email_address,
-    DataType.ENUMERATION: lambda value, enumeration, **kwargs: string_to_enumeration_member(value, enumeration, **kwargs),
+    DataType.ENUMERATION: lambda value, **kwargs: string_to_enumeration_member(value, **kwargs),
     DataType.INTEGER: string_to_integer,
     DataType.IPV4: string_to_ipv4,
     # DataType.LIST: __convert_to_list,
