@@ -47,7 +47,7 @@ class Country(BaseModel):
     represents the United States of America.
     """
     country_code: str = Field(
-        None,
+        ...,
         description="An ISO 3166-1 alpha-2 code.",
         frozen=True
     )
