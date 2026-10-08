@@ -166,8 +166,10 @@ class Version(BaseModel):
         Retrieve the version of the project from the ``pyproject.toml`` file.
 
         This method opens the 'pyproject.toml' file  and extract the version
-        specified under the ``[tool.poetry.version]`` key.  If successful, it
-        returns a ``Version`` object initialized with the version string.
+        specified under the ``[project.version]`` key (PEP 621), or under the
+        ``[tool.poetry.version]`` key if the project doesn't declare its
+        version in the ``[project]`` table.  If successful, it returns a
+        ``Version`` object initialized with the version string.
 
 
         :param project_root_path: The root path of the Python project.
@@ -191,7 +193,7 @@ class Version(BaseModel):
         try:
             with open(pyproject_path_file_name, mode='rt') as fd:
                 data = toml.load(fd)
-            version_str = data['tool']['poetry']['version']
+            version_str = data.get('project', {}).get('version') or data['tool']['poetry']['version']
             return cls.from_string(version_str)
         except (FileNotFoundError, KeyError) as exception:
             if strict:
