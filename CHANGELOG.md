@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.1] - 2026-10-12
+### Changed
+- Replace the libraries `unidecode` (GPLv2+) and `normality` (which
+  depends on `text-unidecode`, Artistic License or GPLv2+) with the
+  library `anyascii` (ISC).
+- `string_to_keywords` transliterates any Unicode character, whatever
+  its script, to lowercase ASCII, as its documentation states.  Latin
+  letters that don't decompose into a base letter and diacritics are now
+  transliterated too (e.g., "Đặng" returns `dang` instead of `đang`,
+  "Straße" returns `strasse` instead of `straße`).  Keywords previously
+  stored by an application need to be rebuilt.
+- `normalize_key` always returns a lowercase string (it returned
+  uppercase letters for CJK and Korean scripts).
+
 ## [1.4.0] - 2026-10-08
 ### Added
 - `Version.from_pyproject` reads the version declared in the `[project]`

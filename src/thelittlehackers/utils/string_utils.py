@@ -27,13 +27,14 @@ import datetime
 import dateutil.parser
 import re
 import string
+import unicodedata
 from enum import Enum, StrEnum
 from re import Pattern
 from typing import Callable, cast, Any, LiteralString
 from typing import TypeVar
 from uuid import UUID
 
-import normality
+from anyascii import anyascii
 
 from thelittlehackers.constants import regex
 from thelittlehackers.constants.data_type import DataType
@@ -46,6 +47,25 @@ from thelittlehackers.utils.any_utils import is_empty_or_none
 REGEX_EMAIL_ADDRESS: Pattern[str] = re.compile(regex.REGEX_PATTERN_EMAIL_ADDRESS)
 REGEX_IPV4: Pattern[str] = re.compile(regex.REGEX_PATTERN_IPV4)
 REGEX_MAC_ADDRESS: Pattern[str] = re.compile(regex.REGEX_PATTERN_MAC_ADDRESS)
+REGEX_NON_ALPHANUMERIC_ASCII: Pattern[str] = re.compile(r'[^a-z0-9\s]')
+
+# Unicode general categories of the characters that separate keywords
+# (control characters, separators, punctuation, and math and other
+# symbols), and of the characters that are removed without separating
+# keywords (format characters, surrogates, private use and unassigned
+# code points, currency and modifier symbols, and other numbers).
+#
+# See https://www.unicode.org/reports/tr44/#General_Category_Values
+KEYWORD_SEPARATOR_UNICODE_CATEGORIES: set[str] = {
+    'Cc', 'Zs', 'Zl', 'Zp',
+    'Pc', 'Pd', 'Ps', 'Pe', 'Pi', 'Pf', 'Po',
+    'Sm', 'So',
+}
+KEYWORD_IGNORED_UNICODE_CATEGORIES: set[str] = {
+    'Cf', 'Cs', 'Co', 'Cn',
+    'Sc', 'Sk',
+    'No',
+}
 
 E = TypeVar('E', bound=StrEnum)
 
@@ -442,13 +462,14 @@ def string_to_keywords(
 ) -> list[str]:
     """
     Convert a string to a list of distinct keywords by removing
-    punctuation, reducing whitespace, and converting accented Unicode
-    characters to ASCII.
+    punctuation, reducing whitespace, and transliterating Unicode
+    characters to lowercase ASCII.
 
     This function cleanses a given string by:
-    - Converting Unicode characters to their ASCII equivalents.
-    - Removing all punctuation.
-    - Reducing any multiple spaces to a single space.
+    - Separating words on punctuation, symbols, and whitespace.
+    - Transliterating Unicode characters, whatever their script, to their
+      closest lowercase ASCII equivalents (e.g., "Đặng" to "dang",
+      "Straße" to "strasse", "Владимир" to "vladimir").
     - Splitting the string into unique keywords and filtering by length.
 
 
@@ -465,20 +486,29 @@ def string_to_keywords(
     if is_empty_or_none(value):
         return []
 
-    # Convert the string to ASCII lower characters.
-    ascii_string = normality.normalize(value)
+    # Replace any punctuation, symbol, separator, or control character with
+    # a space, before transliterating the string, so that keywords are
+    # separated the same way whatever the script of the string.
+    #
+    # The string is first normalized to its compatibility composed form
+    # (NFKC) to replace compatibility characters (e.g., ligatures,
+    # superscripts, full-width forms) with their canonical equivalents.
+    characters = []
+    for c in unicodedata.normalize('NFKC', value):
+        unicode_category = unicodedata.category(c)
+        if unicode_category in KEYWORD_SEPARATOR_UNICODE_CATEGORIES:
+            characters.append(' ')
+        elif unicode_category not in KEYWORD_IGNORED_UNICODE_CATEGORIES:
+            characters.append(c)
 
-    # Replace any punctuation character with space.
-    no_punctuation_string = ''.join([
-        ' ' if c in string.punctuation else c
-        for c in ascii_string
-    ])
-
-    # Remove any double space character.
-    cleansed_string = re.sub(r'\s{2,}', ' ', no_punctuation_string)
+    # Transliterate the string to lowercase ASCII characters, and remove
+    # any non-alphanumeric character resulting from the transliteration
+    # (e.g., "`" for the Arabic letter ain), without separating keywords.
+    ascii_string = anyascii(''.join(characters)).lower()
+    cleansed_string = REGEX_NON_ALPHANUMERIC_ASCII.sub('', ascii_string)
 
     # Decompose the string into distinct keywords.
-    distinct_keywords = set(cleansed_string.split(' '))
+    distinct_keywords = set(cleansed_string.split())
 
     # Filter out keywords of less than 2 characters.
     valid_keywords = [
