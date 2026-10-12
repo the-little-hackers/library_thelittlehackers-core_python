@@ -25,7 +25,7 @@ from __future__ import annotations
 
 from typing import Any
 
-import unidecode
+from anyascii import anyascii
 
 
 def normalize_mapping_keys(names_codes_mapping: dict[str, Any]) -> dict[str, Any]:
@@ -75,5 +75,5 @@ def normalize_key(s: str) -> str:
 
     :return: The normalized string in lowercase ASCII format.
     """
-    normalized_string = unidecode.unidecode(s.lower())
+    normalized_string = anyascii(s).lower()
     return normalized_string
