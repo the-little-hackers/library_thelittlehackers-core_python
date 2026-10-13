@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Changed
+- Rewrite the docstrings of the functions of `string_utils` to describe
+  their actual behavior (e.g., `string_to_enumeration_member` raises a
+  `TypeError`, not a `ValueError`, if `enumeration` is not an
+  enumeration class; `string_to_boolean` returns `default_value`, not
+  `None`, for an unrecognized string).
 - `string_to_email_address` is typed to return `str | None` when
   `strict` is `False`, and `str` otherwise.
 
