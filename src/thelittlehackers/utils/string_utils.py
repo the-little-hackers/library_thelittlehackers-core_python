@@ -30,7 +30,8 @@ import string
 import unicodedata
 from enum import Enum, StrEnum
 from re import Pattern
-from typing import Callable, cast, Any, LiteralString
+from typing import Callable, cast, Any, Literal, LiteralString
+from typing import overload
 from typing import TypeVar
 from uuid import UUID
 
@@ -93,19 +94,23 @@ def is_empty(value: str) -> bool:
 
 def is_valid_email_address(value: str | None) -> bool:
     """
-    Check if the provided string is a valid email address.
+    Check whether a string is a valid email address.
+
+    The surrounding whitespace and the case of the string are ignored.
 
 
-    :param value: A string to be checked as an email address.
+    :param value: The string to check, or ``None``.
 
 
-    :return: ``True`` if the string is a valid email address, ``False``
-        otherwise.
+    :return: ``True`` if the whole string, once stripped of its surrounding
+        whitespace, is a valid email address; ``False`` otherwise.
     """
     if is_empty_or_none(value):
         return False
 
-    return REGEX_EMAIL_ADDRESS.match(value.strip().lower()) is not None
+    # The regular expression is not anchored: the whole string must match,
+    # not only its beginning (e.g., "jane@example.com, john@example.com").
+    return REGEX_EMAIL_ADDRESS.fullmatch(value.strip().lower()) is not None
 
 
 def string_to_boolean(
@@ -243,47 +248,57 @@ def string_to_decimal(
     return decimal
 
 
+@overload
+def string_to_email_address(
+        value: str | None,
+        strict: Literal[True] = True
+) -> str:
+    ...
+
+
+@overload
+def string_to_email_address(
+        value: str | None,
+        strict: bool
+) -> str | None:
+    ...
+
+
 def string_to_email_address(
         value: str | None,
         strict: bool = True
-) -> str:
+) -> str | None:
     """
     Convert a string to a normalized email address.
 
-    This function attempts to convert the provided string into a valid,
-    normalized email address (lowercased and stripped of surrounding
-    whitespace).
-
-    If the string is ``None``, empty, or not a valid email address, the
-    function returns ``None`` unless ``strict`` mode is enabled.
-
-    When ``strict`` is set to ``True``, the function raises a ``ValueError``
-    if the input string is not a valid email address.
+    Email addresses are case-insensitive in practice.  Normalizing them
+    (stripped of their surrounding whitespace and converted to lowercase)
+    allows an application to store and compare them consistently,
+    whatever the case in which the user typed them.
 
 
-    :param value: The string to be converted to an email address.
+    :param value: The string to convert, or ``None``.
 
-    :param strict: A boolean flag that, if set to ``True``, raises a
-        ``ValueError``.  If the string does not represent a valid email
-        address.  Defaults to `True`.
-
-
-    :return: The normalized email address as a string, or ``None`` if the
-        input is invalid and ``strict`` is set to ``False``.
+    :param strict: Indicate whether to raise an exception if the string is
+        ``None``, empty, or not a valid email address.  Defaults to
+        ``True``.
 
 
-    :raises ValueError: If ``strict`` is ``True`` and the input string is
-        not a valid email address.
+    :return: The normalized email address, or ``None`` if the string is
+        ``None``, empty, or not a valid email address, and ``strict`` is
+        ``False``.
+
+
+    :raises ValueError: If ``strict`` is ``True`` and the string is not a
+        valid email address.
     """
-    email_address = None if is_empty_or_none(value) or not is_valid_email_address(value) \
-        else value.strip().lower()
+    if value is not None and is_valid_email_address(value):
+        return value.strip().lower()
 
-    if email_address is None and strict:
-        raise ValueError(
-            f"The string \"{value}\" does not represent an email address"
-        )
+    if strict:
+        raise ValueError(f"The string \"{value}\" does not represent an email address")
 
-    return email_address
+    return None
 
 
 def string_to_enumeration_member(
@@ -826,7 +841,7 @@ DATA_TYPE_CONVERTERS: dict[DataType, Callable] = {
     DataType.BOOLEAN: string_to_boolean,
     DataType.DATE: string_to_date,
     DataType.DECIMAL: string_to_decimal,
-    # DataType.EMAIL_ADDRESS: __convert_to_email_address,
+    DataType.EMAIL_ADDRESS: string_to_email_address,
     DataType.ENUMERATION: lambda value, **kwargs: string_to_enumeration_member(value, **kwargs),
     DataType.INTEGER: string_to_integer,
     DataType.IPV4: string_to_ipv4,

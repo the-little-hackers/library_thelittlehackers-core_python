@@ -23,7 +23,45 @@
 
 import pytest
 
+from thelittlehackers.utils.string_utils import is_valid_email_address
+from thelittlehackers.utils.string_utils import string_to_email_address
 from thelittlehackers.utils.string_utils import string_to_keywords
+
+
+@pytest.mark.parametrize(
+    'value',
+    ['jane.doe@example.com', 'Jane.Doe@Example.COM', '  jane+news@example.co.uk\n'],
+)
+def test_is_valid_email_address(value):
+    assert is_valid_email_address(value)
+
+
+@pytest.mark.parametrize(
+    'value',
+    [None, '', '   ', 'jane.doe', 'jane.doe@', '@example.com', 'jane.doe@example.com, john@example.com'],
+)
+def test_is_valid_email_address_with_invalid_value(value):
+    assert not is_valid_email_address(value)
+
+
+@pytest.mark.parametrize(
+    ('value', 'expected_email_address'),
+    [
+        ('jane.doe@example.com', 'jane.doe@example.com'),
+        ('Jane.Doe@Example.COM', 'jane.doe@example.com'),
+        ('  jane.doe@example.com\n', 'jane.doe@example.com'),
+    ],
+)
+def test_string_to_email_address(value, expected_email_address):
+    assert string_to_email_address(value) == expected_email_address
+
+
+@pytest.mark.parametrize('value', [None, '', 'jane.doe'])
+def test_string_to_email_address_with_invalid_value(value):
+    with pytest.raises(ValueError):
+        string_to_email_address(value)
+
+    assert string_to_email_address(value, strict=False) is None
 
 
 @pytest.mark.parametrize(

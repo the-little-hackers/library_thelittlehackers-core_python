@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+### Changed
+- `string_to_email_address` is typed to return `str | None` when
+  `strict` is `False`, and `str` otherwise.
+
+### Fixed
+- `is_valid_email_address`, and therefore `string_to_email_address`,
+  check the whole string: a string that only starts with a valid email
+  address (e.g., "jane@example.com, john@example.com") is no longer
+  considered valid.
+
 ## [1.4.1] - 2026-10-12
 ### Changed
 - Replace the libraries `unidecode` (GPLv2+) and `normality` (which
