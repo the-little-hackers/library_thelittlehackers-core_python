@@ -149,3 +149,19 @@ def test_string_to_keywords_with_minimal_length():
 @pytest.mark.parametrize('value', [None, '', '   '])
 def test_converter_with_no_value(converter, value):
     assert converter(value, strict=True) is None
+
+
+@pytest.mark.parametrize(
+    'value',
+    ['01-23-45-67-89-AB', '01:23:45:67:89:AB', '0123456789AB', '0123.4567.89AB'],
+)
+def test_string_to_mac_address(value):
+    assert string_utils.string_to_mac_address(value) == ('01', '23', '45', '67', '89', 'AB')
+
+
+@pytest.mark.parametrize('value', [None, '', '01-23-45-67-89', '01-23-45-67-89-GH'])
+def test_string_to_mac_address_with_invalid_value(value):
+    with pytest.raises(ValueError):
+        string_utils.string_to_mac_address(value)
+
+    assert string_utils.string_to_mac_address(value, strict=False) is None

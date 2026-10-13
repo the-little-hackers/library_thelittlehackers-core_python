@@ -601,30 +601,18 @@ def string_to_mac_address(
         ``strict`` is set to ``False``.
     """
     match = None if any_utils.is_empty_or_none(value) else REGEX_MAC_ADDRESS.match(value)
-    mac_address = match and match.group(0)
-
-    if mac_address is None:
+    if match is None:
         if strict:
-            raise ValueError(
-                f"The string \"{value}\" does not represent a MAC address"
-            )
-    else:
-        # Remove separator characters from the MAC address string
-        # representation.
-        mac_address_hexdigits = [
-            c for c in mac_address if c in string.hexdigits
-        ]
+            raise ValueError(f"The string \"{value}\" does not represent a MAC address")
+        return None
 
-        # Split the string into pairs of characters.
-        pairs = [
-            mac_address_hexdigits[i:i + 2]
-            for i in range(0, len(mac_address_hexdigits), 2)
-        ]
-
-        # Convert the list of pairs into a tuple.
-        mac_address = tuple(pairs)
-
-    return mac_address
+    # Remove the separator characters, and split the twelve hexadecimal
+    # digits into six pairs.
+    hexdigits = ''.join(c for c in match.group(0) if c in string.hexdigits)
+    return cast(
+        tuple[str, str, str, str, str, str],
+        tuple(hexdigits[i:i + 2] for i in range(0, len(hexdigits), 2))
+    )
 
 
 def string_to_string(

@@ -21,6 +21,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   returning `None` for `None` or an empty string, even when `strict` is
   `True`, as their callers rely on it; this is now documented and
   tested.
+- `string_to_mac_address` returns a tuple of six strings of two
+  hexadecimal digits (e.g., `('01', '23', '45', '67', '89', 'AB')`), as
+  its documentation states, instead of a tuple of lists of characters
+  (e.g., `(['0', '1'], ['2', '3'], ...)`).
 
 ## [1.4.1] - 2026-10-12
 ### Changed
