@@ -35,6 +35,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `any_utils.is_empty_or_none` never considers a number as empty, as its
   documentation states, including the numbers that are falsy when equal
   to zero (e.g., `Decimal(0)`, `Fraction(0)`).
+- `any_utils.is_uuid` returns `False` for a value that is neither a
+  string nor a `UUID` (e.g., an integer), instead of raising an
+  `AttributeError`.
 - `string_to_boolean` ignores the surrounding whitespace of the string
   (e.g., `" yes "` returns `True` instead of the default value).
 

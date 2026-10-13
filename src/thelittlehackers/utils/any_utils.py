@@ -139,13 +139,14 @@ def is_uuid(value: str | UUID | None) -> bool:
     :return: ``True`` if the input is a UUID object or can be converted to
         a UUID; ``False`` otherwise.
     """
-    if value is None:
-        return False
-
     if isinstance(value, UUID):
         return True
 
+    if not isinstance(value, str):
+        return False
+
     try:
-        return UUID(value) is not None
-    except (TypeError, ValueError):
+        UUID(value)
+        return True
+    except ValueError:
         return False
