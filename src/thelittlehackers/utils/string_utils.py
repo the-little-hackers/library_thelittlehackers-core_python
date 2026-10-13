@@ -24,11 +24,11 @@
 from __future__ import annotations
 
 import datetime
-import dateutil.parser
 import re
 import string
 import unicodedata
-from enum import Enum, StrEnum
+from enum import Enum
+from enum import StrEnum
 from re import Pattern
 from typing import Callable
 from typing import Literal
@@ -37,6 +37,7 @@ from typing import cast
 from typing import overload
 from uuid import UUID
 
+import dateutil.parser
 from anyascii import anyascii
 
 from thelittlehackers.constants import regex
@@ -44,12 +45,29 @@ from thelittlehackers.constants.data_type import DataType
 from thelittlehackers.models.locale import Locale
 from thelittlehackers.models.version import Version
 from thelittlehackers.utils import any_utils
-from thelittlehackers.utils.any_utils import is_empty_or_none
+# Re-exported: applications call `string_utils.is_empty_or_none`.
+from thelittlehackers.utils.any_utils import is_empty_or_none  # noqa: F401
 
 
+# Regular expression that matches an email address (RFC 5322), in
+# lowercase.  It is not anchored: use `fullmatch` to check a whole
+# string.
 REGEX_EMAIL_ADDRESS: Pattern[str] = re.compile(regex.REGEX_PATTERN_EMAIL_ADDRESS)
+
+# Regular expression that matches an IPv4 address in the dot-decimal
+# notation (e.g., `192.168.1.1`), each byte between 0 and 255.
 REGEX_IPV4: Pattern[str] = re.compile(regex.REGEX_PATTERN_IPV4)
+
+# Regular expression that matches a MAC address, as six groups of two
+# hexadecimal digits separated by hyphens, by colons, or not separated
+# (e.g., `01-23-45-67-89-AB`), or as three groups of four hexadecimal
+# digits separated by dots (e.g., `0123.4567.89AB`).
 REGEX_MAC_ADDRESS: Pattern[str] = re.compile(regex.REGEX_PATTERN_MAC_ADDRESS)
+
+# Regular expression that matches any character other than a lowercase
+# ASCII letter, a digit, or whitespace.  It is used to remove the
+# characters left over from the transliteration of keywords to ASCII
+# (e.g., "`" for the Arabic letter ain).
 REGEX_NON_ALPHANUMERIC_ASCII: Pattern[str] = re.compile(r'[^a-z0-9\s]')
 
 # Unicode general categories of the characters that separate keywords
@@ -70,6 +88,8 @@ KEYWORD_IGNORED_UNICODE_CATEGORIES: set[str] = {
     'No',
 }
 
+# Type of the enumeration members converted by
+# `string_to_enumeration_member`.
 E = TypeVar('E', bound=StrEnum)
 
 
@@ -106,7 +126,7 @@ def is_valid_email_address(value: str | None) -> bool:
     :return: ``True`` if the whole string, once stripped of its surrounding
         whitespace, is a valid email address; ``False`` otherwise.
     """
-    if is_empty_or_none(value):
+    if any_utils.is_empty_or_none(value):
         return False
 
     # The regular expression is not anchored: the whole string must match,
@@ -475,7 +495,7 @@ def string_to_keywords(
     :return: The distinct keywords of the string, in no particular order,
         or an empty list if ``value`` is ``None`` or empty.
     """
-    if is_empty_or_none(value):
+    if any_utils.is_empty_or_none(value):
         return []
 
     # Replace any punctuation, symbol, separator, or control character with
