@@ -24,16 +24,20 @@
 from __future__ import annotations
 
 import datetime
-import dateutil.parser
 import re
 import string
 import unicodedata
-from enum import Enum, StrEnum
+from enum import Enum
+from enum import StrEnum
 from re import Pattern
-from typing import Callable, cast, Any, LiteralString
+from typing import Callable
+from typing import Literal
 from typing import TypeVar
+from typing import cast
+from typing import overload
 from uuid import UUID
 
+import dateutil.parser
 from anyascii import anyascii
 
 from thelittlehackers.constants import regex
@@ -41,12 +45,29 @@ from thelittlehackers.constants.data_type import DataType
 from thelittlehackers.models.locale import Locale
 from thelittlehackers.models.version import Version
 from thelittlehackers.utils import any_utils
-from thelittlehackers.utils.any_utils import is_empty_or_none
+# Re-exported: applications call `string_utils.is_empty_or_none`.
+from thelittlehackers.utils.any_utils import is_empty_or_none  # noqa: F401
 
 
+# Regular expression that matches an email address (RFC 5322), in
+# lowercase.  It is not anchored: use `fullmatch` to check a whole
+# string.
 REGEX_EMAIL_ADDRESS: Pattern[str] = re.compile(regex.REGEX_PATTERN_EMAIL_ADDRESS)
+
+# Regular expression that matches an IPv4 address in the dot-decimal
+# notation (e.g., `192.168.1.1`), each byte between 0 and 255.
 REGEX_IPV4: Pattern[str] = re.compile(regex.REGEX_PATTERN_IPV4)
+
+# Regular expression that matches a MAC address, as six groups of two
+# hexadecimal digits separated by hyphens, by colons, or not separated
+# (e.g., `01-23-45-67-89-AB`), or as three groups of four hexadecimal
+# digits separated by dots (e.g., `0123.4567.89AB`).
 REGEX_MAC_ADDRESS: Pattern[str] = re.compile(regex.REGEX_PATTERN_MAC_ADDRESS)
+
+# Regular expression that matches any character other than a lowercase
+# ASCII letter, a digit, or whitespace.  It is used to remove the
+# characters left over from the transliteration of keywords to ASCII
+# (e.g., "`" for the Arabic letter ain).
 REGEX_NON_ALPHANUMERIC_ASCII: Pattern[str] = re.compile(r'[^a-z0-9\s]')
 
 # Unicode general categories of the characters that separate keywords
@@ -67,23 +88,24 @@ KEYWORD_IGNORED_UNICODE_CATEGORIES: set[str] = {
     'No',
 }
 
+# Type of the enumeration members converted by
+# `string_to_enumeration_member`.
 E = TypeVar('E', bound=StrEnum)
 
 
 def is_empty(value: str) -> bool:
     """
-    Checks if the specified value is empty.
-
-    A value is considered empty if it is an empty string after stripping
-    whitespace.
+    Check whether a string is empty or contains only whitespace.
 
 
-    :param value: The value to check for being empty.
-
-    :return: ``True`` if the value is empty , ``False`` otherwise.
+    :param value: The string to check.
 
 
-    :raise ValueError: if the input value is ``None``.
+    :return: ``True`` if the string is empty once stripped of its
+        surrounding whitespace; ``False`` otherwise.
+
+
+    :raise ValueError: If ``value`` is ``None``.
     """
     if value is None:
         raise ValueError("Input value cannot be None.")
@@ -93,19 +115,23 @@ def is_empty(value: str) -> bool:
 
 def is_valid_email_address(value: str | None) -> bool:
     """
-    Check if the provided string is a valid email address.
+    Check whether a string is a valid email address.
+
+    The surrounding whitespace and the case of the string are ignored.
 
 
-    :param value: A string to be checked as an email address.
+    :param value: The string to check, or ``None``.
 
 
-    :return: ``True`` if the string is a valid email address, ``False``
-        otherwise.
+    :return: ``True`` if the whole string, once stripped of its surrounding
+        whitespace, is a valid email address; ``False`` otherwise.
     """
-    if is_empty_or_none(value):
+    if any_utils.is_empty_or_none(value):
         return False
 
-    return REGEX_EMAIL_ADDRESS.match(value.strip().lower()) is not None
+    # The regular expression is not anchored: the whole string must match,
+    # not only its beginning (e.g., "jane@example.com, john@example.com").
+    return REGEX_EMAIL_ADDRESS.fullmatch(value.strip().lower()) is not None
 
 
 def string_to_boolean(
@@ -114,46 +140,43 @@ def string_to_boolean(
         default_value: bool = False
 ) -> bool:
     """
-    Convert a string representation of a boolean value to its
-    corresponding boolean.
+    Convert a string representation of a boolean to a boolean.
 
-    This function interprets common string representations of boolean
-    values (e.g., 'yes', 'true', '1') and returns the corresponding
-    boolean.  If the ``strict`` parameter is set to ``True``, the function
-    will raise a ``ValueError`` or if the string is not a recognized
-    boolean representation.  Otherwise, it will return the ``default_value``
-    or ``False`` if no valid representation is found.
+    The recognized representations, ignoring case and surrounding
+    whitespace, are ``yes``, ``y``, ``true``, ``t``, and ``1`` for
+    ``True``, and ``no``, ``n``, ``false``, ``f``, and ``0`` for
+    ``False``.
 
 
-    :param value: The input to be converted into a boolean.
+    :param value: The string to convert, a boolean (returned unchanged), or
+        ``None``.
 
-    :param strict: A boolean flag indicating whether to enforce strict
-        validation.  If ``True``, a ``ValueError`` is raised for invalid
-        boolean strings.  If ``False``, the function returns ``None`` for
-        invalid boolean strings.
+    :param strict: Indicate whether to raise an exception if ``value`` is
+        not a recognized representation of a boolean, including ``None``
+        and an empty string.  Defaults to ``False``.
 
-    :param default_value: The boolean value to return if ``value`` is ``None``
-        or an empty string.  Defaults to ``False``.
-
-
-    :return: The boolean value corresponding to the string, or
-        ``default_value`` if the string is not valid and ``strict`` is
-        ``False``.
+    :param default_value: The boolean to return if ``value`` is not a
+        recognized representation of a boolean and ``strict`` is ``False``.
+        Defaults to ``False``.
 
 
-    :raise ValueError: If ``strict`` is ```True``` and `value` does not
-        represent a valid boolean.
+    :return: The boolean represented by ``value``, or ``default_value`` if
+        ``value`` is not a recognized representation of a boolean and
+        ``strict`` is ``False``.
+
+
+    :raise ValueError: If ``strict`` is ``True`` and ``value`` is not a
+        recognized representation of a boolean.
     """
     if isinstance(value, bool):
         return value
 
-    if isinstance(value, str):
-        value = value.lower()
+    normalized_value = value.strip().lower() if isinstance(value, str) else value
 
-    if value in ('yes', 'y', 'true', 't', '1'):
+    if normalized_value in ('yes', 'y', 'true', 't', '1'):
         return True
 
-    if value in ('no', 'n', 'false', 'f', '0'):
+    if normalized_value in ('no', 'n', 'false', 'f', '0'):
         return False
 
     if strict:
@@ -167,39 +190,43 @@ def string_to_date(
         strict: bool = True
 ) -> datetime.date | None:
     """
-    Convert a string representation of a date value to its corresponding
-    date.
+    Convert a string representation of a date to a date.
+
+    The string can be in any format that ``dateutil.parser.parse`` supports
+    (e.g., ``2026-10-13``, ``13 Oct 2026``).  The time part of the string,
+    if any, is ignored.
 
 
-    :param value: The input to be converted into a date.
+    :param value: The string to convert, a date (returned unchanged), a
+        date/time (whose date part is returned), or ``None``.
 
-    :param strict: A boolean flag indicating whether to enforce strict
-        validation.  If ``True``, a ``ValueError`` is raised for invalid
-        date strings.  If ``False``, the function returns ``None`` for
-        invalid date strings.
-
-
-    :return: The date corresponding to the string.
+    :param strict: Indicate whether to raise an exception if ``value`` does
+        not represent a date.  Defaults to ``True``.
 
 
-    :raise OverflowError: Raised if the parsed date exceeds the largest
-        valid C integer on your system.
+    :return: The date represented by ``value``, ``None`` if ``value`` is ``None`` or an empty
+            string, whatever ``strict``, or if ``value``
+        does not represent a date and ``strict`` is ``False``.
 
-    :raise ValueError: If ``strict`` is ```True``` and ``value`` does not
-        represent a valid date or the string format is unknown.
+
+    :raise OverflowError: If the parsed date exceeds the largest valid C
+        integer on the system.
+
+    :raise ValueError: If ``strict`` is ``True`` and ``value`` does not
+        represent a date.
     """
     try:
-        date = None if any_utils.is_empty_or_none(value) \
-            else value if isinstance(value, datetime.date) \
+        date = (
+            None if any_utils.is_empty_or_none(value)
+            # A `datetime` is also a `date`: keep its date part only.
+            else value.date() if isinstance(value, datetime.datetime)
+            else value if isinstance(value, datetime.date)
             else dateutil.parser.parse(value).date()
+        )
     except ValueError:
         if strict:
             raise
         date = None
-
-    if date is None:
-        if strict:
-            f"The string \"{value}\" does not represent a date"
 
     return date
 
@@ -209,23 +236,25 @@ def string_to_decimal(
         strict: bool = True
 ) -> float | None:
     """
-    Convert a string representation of a floating number value to its
-    corresponding floating number.
+    Convert a string representation of a decimal number to a floating
+    point number.
 
 
-    :param value: The input to be converted into an floating number.
+    :param value: The string to convert, a floating point number (returned
+        unchanged), or ``None``.
 
-    :param strict: A boolean flag indicating whether to enforce strict
-        validation.  If ``True``, a ``ValueError`` is raised for invalid
-        floating number strings.  If ``False``, the function returns
-        ``None`` for invalid floating number strings.
-
-
-    :return: The floating number value corresponding to the string.
+    :param strict: Indicate whether to raise an exception if ``value`` does
+        not represent a decimal number.  Defaults to ``True``.
 
 
-    :raise ValueError: If ``strict`` is ```True``` and ``value`` does not
-        represent a valid floating number.
+    :return: The floating point number represented by ``value``, ``None`` if ``value`` is ``None`` or an empty
+            string, whatever ``strict``,
+        or if ``value`` does not represent a decimal number and ``strict``
+        is ``False``.
+
+
+    :raise ValueError: If ``strict`` is ``True`` and ``value`` does not
+        represent a decimal number.
     """
     try:
         decimal = None if any_utils.is_empty_or_none(value) \
@@ -236,54 +265,60 @@ def string_to_decimal(
             raise
         decimal = None
 
-    if decimal is None:
-        if strict:
-            f"The string \"{value}\" does not represent a floating number"
-
     return decimal
+
+
+@overload
+def string_to_email_address(
+        value: str | None,
+        strict: Literal[True] = True
+) -> str:
+    ...
+
+
+@overload
+def string_to_email_address(
+        value: str | None,
+        strict: bool
+) -> str | None:
+    ...
 
 
 def string_to_email_address(
         value: str | None,
         strict: bool = True
-) -> str:
+) -> str | None:
     """
     Convert a string to a normalized email address.
 
-    This function attempts to convert the provided string into a valid,
-    normalized email address (lowercased and stripped of surrounding
-    whitespace).
-
-    If the string is ``None``, empty, or not a valid email address, the
-    function returns ``None`` unless ``strict`` mode is enabled.
-
-    When ``strict`` is set to ``True``, the function raises a ``ValueError``
-    if the input string is not a valid email address.
+    Email addresses are case-insensitive in practice.  Normalizing them
+    (stripped of their surrounding whitespace and converted to lowercase)
+    allows an application to store and compare them consistently,
+    whatever the case in which the user typed them.
 
 
-    :param value: The string to be converted to an email address.
+    :param value: The string to convert, or ``None``.
 
-    :param strict: A boolean flag that, if set to ``True``, raises a
-        ``ValueError``.  If the string does not represent a valid email
-        address.  Defaults to `True`.
-
-
-    :return: The normalized email address as a string, or ``None`` if the
-        input is invalid and ``strict`` is set to ``False``.
+    :param strict: Indicate whether to raise an exception if the string is
+        ``None``, empty, or not a valid email address.  Defaults to
+        ``True``.
 
 
-    :raises ValueError: If ``strict`` is ``True`` and the input string is
-        not a valid email address.
+    :return: The normalized email address, or ``None`` if the string is
+        ``None``, empty, or not a valid email address, and ``strict`` is
+        ``False``.
+
+
+    :raise ValueError: If ``strict`` is ``True`` and the string is not a
+        valid email address.
     """
-    email_address = None if is_empty_or_none(value) or not is_valid_email_address(value) \
-        else value.strip().lower()
+    if value is not None and is_valid_email_address(value):
+        return value.strip().lower()
 
-    if email_address is None and strict:
-        raise ValueError(
-            f"The string \"{value}\" does not represent an email address"
-        )
+    if strict:
+        raise ValueError(f"The string \"{value}\" does not represent an email address")
 
-    return email_address
+    return None
 
 
 def string_to_enumeration_member(
@@ -294,36 +329,37 @@ def string_to_enumeration_member(
         default_value: str | E | None = None,
 ) -> E | None:
     """
-    Convert a string representation of an enumeration member to its
-    corresponding enumeration member.
+    Convert the name or the value of an enumeration member to this member.
+
+    The name of a member is looked up first, then its value.
 
 
-    :param value: The name of an enumeration member, or its value, or
-        ``None``.
+    :param value: The name or the value of a member of ``enumeration``, a
+        member of ``enumeration`` (returned unchanged), or ``None``.
 
-    :param enumeration: The enumeration class to which the value should
-        belong.
+    :param enumeration: The enumeration class the member belongs to.
 
-    :param strict: A boolean flag indicating whether to enforce strict
-        validation.  If ``True``, a ``ValueError`` is raised for invalid
-        enumeration strings.  If ``False``, the function returns ``None``
-        for invalid enumeration strings.
+    :param strict: Indicate whether to raise an exception if ``value`` is
+        neither the name nor the value of a member of ``enumeration``.
+        Defaults to ``True``.
 
-    :param default_value: The default enumeration member to return if
+    :param default_value: The name, the value, or the member to convert if
         ``value`` is ``None`` or an empty string.  Defaults to ``None``.
 
 
-    :return: The corresponding enumeration member if conversion succeeds,
-        or ``None`` if ``strict`` is ``False`` and conversion fails.
+    :return: The member of ``enumeration``, or ``None`` if ``value`` and
+        ``default_value`` are both ``None`` or empty, or if ``value`` is
+        neither the name nor the value of a member and ``strict`` is
+        ``False``.
 
 
-    :raise ValueError: If ``enumeration`` is not a subclass of ``Enum``.
+    :raise TypeError: If ``enumeration`` is not an enumeration class.
 
-    :raise ValueError: If ``value`` is a string that does not match any
-        member of ``enumeration`` and ``strict`` is ``True``.
+    :raise ValueError: If ``strict`` is ``True`` and ``value`` is neither
+        the name nor the value of a member of ``enumeration``.
     """
     if not isinstance(enumeration, type):
-        raise TypeError(f"'enumeration' must be an StrEnum class, got {enumeration!r}")
+        raise TypeError(f"'enumeration' must be an enumeration class, got {enumeration!r}")
 
     if not issubclass(enumeration, Enum):
         raise TypeError(f"'enumeration' must be a subclass of Enum, got {enumeration!r}")
@@ -360,23 +396,23 @@ def string_to_integer(
         strict: bool = True
 ) -> int | None:
     """
-    Convert a string representation of an integer value to its
-    corresponding integer.
+    Convert a string representation of an integer to an integer.
 
 
-    :param value: The input to be converted into an integer.
+    :param value: The string to convert, an integer (returned unchanged), or
+        ``None``.
 
-    :param strict: A boolean flag indicating whether to enforce strict
-        validation.  If ``True``, a ``ValueError`` is raised for invalid
-        integer strings.  If ``False``, the function returns ``None`` for
-        invalid integer strings.
-
-
-    :return: The integer value corresponding to the string.
+    :param strict: Indicate whether to raise an exception if ``value`` does
+        not represent an integer.  Defaults to ``True``.
 
 
-    :raise ValueError: If ``strict`` is ```True``` and ``value`` does not
-        represent a valid integer.
+    :return: The integer represented by ``value``, ``None`` if ``value`` is ``None`` or an empty
+            string, whatever ``strict``, or if
+        ``value`` does not represent an integer and ``strict`` is ``False``.
+
+
+    :raise ValueError: If ``strict`` is ``True`` and ``value`` does not
+        represent an integer.
     """
     try:
         integer = None if any_utils.is_empty_or_none(value) \
@@ -387,10 +423,6 @@ def string_to_integer(
             raise
         integer = None
 
-    if integer is None:
-        if strict:
-            f"The string \"{value}\" does not represent an integer"
-
     return integer
 
 
@@ -399,61 +431,42 @@ def string_to_ipv4(
         strict: bool = True
 ) -> tuple[int, int, int, int] | None:
     """
-    Convert a string representation of an IPv4 address into a tuple of
-    four integers.
+    Convert a string representation of an IPv4 address to a tuple of its
+    four bytes.
 
-    Examples:
     >>> string_to_ipv4('192.168.1.1')
     (192, 168, 1, 1)
 
-    >>> string_to_ipv4('256.168.1.1')
-    ValueError: The IPv4 "256.168.1.1" has invalid byte(s)
-
-    >>> string_to_ipv4(None)
-    ValueError: The specified string "None" does not represent an IPv4
-
-    >>> string_to_ipv4(None, strict=False)
-    None
+    >>> string_to_ipv4('256.168.1.1', strict=False) is None
+    True
 
 
-    :param value: The input to be converted into an IPv4 address.  It
-        should be in the format `'X.X.X.X'`, where X is an integer between
-        ``0`` and ``255``.   If ``value`` is ``None`` or an empty string,
-         the function will return ``None`` unless ``strict`` is set to
-         ``True``.
+    :param value: The string to convert, in the dot-decimal notation
+        ``X.X.X.X`` where each ``X`` is an integer between ``0`` and
+        ``255``, or ``None``.
 
-    :param strict: If ``True``, the function will raise a ``ValueError``
-        if the string is ``None``, empty, or does not represent a valid
-        IPv4 address.  If ``False``, the function will return ``None`` fpr
-        such cases.
+    :param strict: Indicate whether to raise an exception if ``value`` is
+        ``None``, empty, or not an IPv4 address.  Defaults to ``True``.
 
 
-    :return: A tuple of four integers representing the IPv4 address, where
-        each integer corresponds to one byte of the address (e.g.,
-        ``(192, 168, 1, 1)``).  If ``value`` is ``None``, empty, or
-        invalid (and ``strict`` is ``False``), the function returns ``None``.
+    :return: The four bytes of the IPv4 address (e.g., ``(192, 168, 1, 1)``),
+        or ``None`` if ``value`` is ``None``, empty, or not an IPv4 address
+        and ``strict`` is ``False``.
 
 
-    :raise ValueError: If the input string does not represent a valid IPv4
-        address and ``strict`` is ``True``.  This includes cases where the
-        string is ``None``, empty, or has invalid bytes (e.g., values not
-        in the range ``0-255``).
+    :raise ValueError: If ``strict`` is ``True`` and ``value`` is ``None``,
+        empty, or not an IPv4 address.
     """
     match = None if any_utils.is_empty_or_none(value) else REGEX_IPV4.match(value)
-    ipv4_address = match and match.group(0).split('.')
-
-    if ipv4_address is None:
+    if match is None:
         if strict:
-            raise ValueError(
-                f"The string \"{value}\" does not represent a IPV4 address"
-            )
-    else:
-        ipv4_address = tuple(
-            int(component)
-            for component in ipv4_address
-        )
+            raise ValueError(f"The string \"{value}\" does not represent an IPv4 address")
+        return None
 
-    return ipv4_address
+    return cast(
+        tuple[int, int, int, int],
+        tuple(int(byte) for byte in match.group(0).split('.'))
+    )
 
 
 def string_to_keywords(
@@ -461,29 +474,28 @@ def string_to_keywords(
         keyword_minimal_length: int = 1
 ) -> list[str]:
     """
-    Convert a string to a list of distinct keywords by removing
-    punctuation, reducing whitespace, and transliterating Unicode
-    characters to lowercase ASCII.
+    Convert a string to a list of distinct keywords.
 
-    This function cleanses a given string by:
-    - Separating words on punctuation, symbols, and whitespace.
-    - Transliterating Unicode characters, whatever their script, to their
-      closest lowercase ASCII equivalents (e.g., "Đặng" to "dang",
-      "Straße" to "strasse", "Владимир" to "vladimir").
-    - Splitting the string into unique keywords and filtering by length.
+    The function:
 
-
-    :param value: The input string to be processed into keywords.
-
-    :param keyword_minimal_length: The minimum length a keyword must have
-        to be included in the final list.
+    - Separates the words on punctuation, symbols, and whitespace.
+    - Transliterates the Unicode characters, whatever their script, to their
+      closest lowercase ASCII equivalents (e.g., "Đặng" to "dang", "Straße"
+      to "strasse", "Владимир" to "vladimir").
+    - Keeps the distinct words longer than ``keyword_minimal_length``.
 
 
-    :return: A list of unique keywords, stripped of punctuation,
-        accentuated characters, and extra spaces, meeting the specified
-        minimal length.
+    :param value: The string to convert, or ``None``.
+
+    :param keyword_minimal_length: The length that a keyword must exceed to
+        be returned.  Defaults to ``1``, which excludes single-character
+        keywords.
+
+
+    :return: The distinct keywords of the string, in no particular order,
+        or an empty list if ``value`` is ``None`` or empty.
     """
-    if is_empty_or_none(value):
+    if any_utils.is_empty_or_none(value):
         return []
 
     # Replace any punctuation, symbol, separator, or control character with
@@ -510,14 +522,12 @@ def string_to_keywords(
     # Decompose the string into distinct keywords.
     distinct_keywords = set(cleansed_string.split())
 
-    # Filter out keywords of less than 2 characters.
-    valid_keywords = [
-        keywords
-        for keywords in distinct_keywords
-        if len(keywords) > keyword_minimal_length
+    # Keep the keywords longer than the minimal length.
+    return [
+        keyword
+        for keyword in distinct_keywords
+        if len(keyword) > keyword_minimal_length
     ]
-
-    return valid_keywords
 
 
 def string_to_locale(
@@ -525,28 +535,31 @@ def string_to_locale(
         strict: bool = True
 ) -> Locale | None:
     """
-    Convert a string representation of a locale to its corresponding
-    ``Locale`` object.
+    Convert a string representation of a locale to a ``Locale``.
 
 
-    :param value: The input to be converted into a locale.  The input
-        needs to be a ISO 639-3 alpha-3 code (or alpha-2 code), optionally
-         followed by a dash character `-` and a ISO 3166-1 alpha-2 code.
+    :param value: The string to convert, a ``Locale`` (returned unchanged),
+        or ``None``.  The string is an ISO 639-3 alpha-3 code (or an ISO
+        639-1 alpha-2 code), optionally followed by a dash character ``-``
+        and an ISO 3166-1 alpha-2 code (e.g., ``fra``, ``fr-CA``).
 
-    :param strict: A boolean flag indicating whether to enforce strict
-        validation.  If ``True``, the input value must strictly comply
-        with RFC 4646, otherwise a ``ValueError`` is raised.  If ``False``,
-        the input value can be a Java-style locale (character `_` instead
-        of `-`).
-
-
-    :return: The ``Locale`` object corresponding to the string.
+    :param strict: Indicate whether the string must strictly comply with
+        RFC 4646, and whether to raise an exception if it does not represent
+        a locale.  If ``False``, a Java-style locale (with an underscore
+        character ``_`` instead of a dash) is also accepted.  Defaults to
+        ``True``.
 
 
-    :raise MalformedLocaleException: If ``locale`` does not represent a
-        valid locale.
+    :return: The ``Locale`` represented by ``value``, ``None`` if ``value`` is ``None`` or an empty
+            string, whatever ``strict``, or if
+        ``value`` does not represent a locale and ``strict`` is ``False``.
+
+
+    :raise MalformedLocaleException: If ``strict`` is ``True`` and ``value``
+        does not represent a locale.
     """
-    from thelittlehackers.models.locale import MalformedLocaleException  # Declare here To avoid circular dependency.
+    # Imported here to avoid a circular import.
+    from thelittlehackers.models.locale import MalformedLocaleException
 
     try:
         locale = (
@@ -559,10 +572,6 @@ def string_to_locale(
             raise exception
         locale = None
 
-    if locale is None:
-        if strict:
-            f"The string \"{value}\" does not represent a locale"
-
     return locale
 
 
@@ -571,75 +580,61 @@ def string_to_mac_address(
         strict: bool = True
 ) -> tuple[str, str, str, str, str, str] | None:
     """
-    Convert a string representation of a Media Access Control (MAC)
-    address into a tuple of hexadecimal strings.
+    Convert a string representation of a Media Access Control (MAC) address
+    to a tuple of its six bytes.
 
-    A MAC address is a unique identifier assigned to a network interface
-    controller (NIC) for communications at the data link layer of a
-    network segment. The standard IEEE 802 format for representing EUI-48
-    addresses is six groups of two hexadecimal digits, separated by
-    hyphens (e.g., ``01-23-45-67-89-AB``). Other common formats include:
+    The standard IEEE 802 format of an EUI-48 address is six groups of two
+    hexadecimal digits separated by hyphens (e.g., ``01-23-45-67-89-AB``).
+    The following formats are also accepted:
 
-    - Six groups separated by colons (e.g., ``01:23:45:67:89:AB``)
+    - Six groups of two hexadecimal digits separated by colons (e.g.,
+      ``01:23:45:67:89:AB``), or not separated (e.g., ``0123456789AB``).
     - Three groups of four hexadecimal digits separated by dots (e.g.,
-      ``0123.4567.89AB``)
-
-    The function validates the input string against these formats and
-    returns the corresponding hexadecimal components.
+      ``0123.4567.89AB``).
 
 
-    :param value: A string representation of a MAC address.  If `None`,
-        the function will behave according to the ``strict`` parameter.
+    :param value: The string to convert, or ``None``.
 
-    :param strict: If `True`, the function raises a ValueError when the
-        input string does not match a valid MAC address format.  If
-        ``False``, the function returns ``None`` for invalid inputs.
+    :param strict: Indicate whether to raise an exception if ``value`` is
+        ``None``, empty, or not a MAC address.  Defaults to ``True``.
 
 
-    :return: A tuple of six hexadecimal strings ``(hex1, hex2, hex3, hex4,
-        hex5, hex6)`` representing the MAC address, each ranging from
-        ``0x00`` to ``0xFF``.  Return ``None`` if the input is invalid and
-        ``strict`` is set to ``False``.
+    :return: The six bytes of the MAC address, as strings of two hexadecimal
+        digits in the case of ``value`` (e.g., ``('01', '23', '45', '67',
+        '89', 'AB')``), or ``None`` if ``value`` is ``None``, empty, or not
+        a MAC address and ``strict`` is ``False``.
+
+
+    :raise ValueError: If ``strict`` is ``True`` and ``value`` is ``None``,
+        empty, or not a MAC address.
     """
     match = None if any_utils.is_empty_or_none(value) else REGEX_MAC_ADDRESS.match(value)
-    mac_address = match and match.group(0)
-
-    if mac_address is None:
+    if match is None:
         if strict:
-            raise ValueError(
-                f"The string \"{value}\" does not represent a MAC address"
-            )
-    else:
-        # Remove separator characters from the MAC address string
-        # representation.
-        mac_address_hexdigits = [
-            c for c in mac_address if c in string.hexdigits
-        ]
+            raise ValueError(f"The string \"{value}\" does not represent a MAC address")
+        return None
 
-        # Split the string into pairs of characters.
-        pairs = [
-            mac_address_hexdigits[i:i + 2]
-            for i in range(0, len(mac_address_hexdigits), 2)
-        ]
-
-        # Convert the list of pairs into a tuple.
-        mac_address = tuple(pairs)
-
-    return mac_address
+    # Remove the separator characters, and split the twelve hexadecimal
+    # digits into six pairs.
+    hexdigits = ''.join(c for c in match.group(0) if c in string.hexdigits)
+    return cast(
+        tuple[str, str, str, str, str, str],
+        tuple(hexdigits[i:i + 2] for i in range(0, len(hexdigits), 2))
+    )
 
 
 def string_to_string(
         value: str | None
 ) -> str | None:
     """
-    Return the input string if it is not empty or ``None``.
+    Return a string, or ``None`` if it is empty.
 
 
-    :param value: A string.
+    :param value: A string, or ``None``.
 
 
-    :return: The input string if it is non-empty and not ``None``;
-        otherwise, ``None``.
+    :return: The string unchanged, or ``None`` if it is ``None``, empty, or
+        contains only whitespace.
     """
     return None if any_utils.is_empty_or_none(value) else value
 
@@ -649,31 +644,25 @@ def string_to_time(
         strict: bool = True
 ) -> datetime.time | None:
     """
-    Convert a string representation of a time value into a `datetime.time`
-    object.
+    Convert a string representation of a time to a time.
 
 
-    :param value: The input to be converted into a `datetime.time` object.
-        This can be a string, a ``datetime.time`` object, or ``None``.
-        A string must be given in the format `HH:MM` or `HH:MM:SS`, where:
+    :param value: The string to convert, a time (returned unchanged), or
+        ``None``.  The string is in the format ``HH:MM:SS`` or ``HH:MM``,
+        where ``HH`` is the hour in the 24-hour format (``00`` to ``23``),
+        ``MM`` the minute, and ``SS`` the second (``00`` to ``59``).
 
-        - ``HH``: Two-digit hour in 24-hour format (00-23).
-        - ``MM``: Two-digit minute (00-59).
-        - ``SS``: Two-digit second (00-59).
-
-    :param strict: A boolean flag indicating whether to enforce strict
-        validation.  If ``True``, a ``ValueError`` is raised for invalid
-        time strings.  If ``False``, the function returns ``None`` for
-        invalid time strings.
+    :param strict: Indicate whether to raise an exception if ``value`` does
+        not represent a time.  Defaults to ``True``.
 
 
-    :return: A ``datetime.time`` object representing the time specified by
-        the input string, or ``None`` if the input is ``None`` or an
-        invalid string in non-strict mode.
+    :return: The time represented by ``value``, ``None`` if ``value`` is ``None`` or an empty
+            string, whatever ``strict``, or if ``value``
+        does not represent a time and ``strict`` is ``False``.
 
 
-    :raise ValueError: If ``strict`` is ```True``` and ``value`` does not
-        represent a valid time in the expected format.
+    :raise ValueError: If ``strict`` is ``True`` and ``value`` does not
+        represent a time.
     """
     try:
         time = None if any_utils.is_empty_or_none(value) \
@@ -687,10 +676,6 @@ def string_to_time(
                 raise
             time = None
 
-    if time is None:
-        if strict:
-            f"The string \"{value}\" does not represent a time"
-
     return time
 
 
@@ -699,26 +684,27 @@ def string_to_timestamp(
         strict: bool = True
 ) -> datetime.datetime | None:
     """
-    Convert a string representation of a date/time value into a
-    ``datetime.datetime`` object.
+    Convert an ISO 8601 representation of a date/time to a date/time.
 
 
-    :param value: The input to be converted into a date/time.
+    :param value: The string to convert (e.g., ``2026-10-13T08:30:00Z``),
+        a date/time (returned unchanged), or ``None``.
 
-    :param strict: A boolean flag indicating whether to enforce strict
-        validation.  If ``True``, a ``ValueError`` is raised for invalid
-        date/time strings.  If ``False``, the function returns ``None``
-        for invalid date/time strings.
-
-
-    :return: The date/time value corresponding to the string.
+    :param strict: Indicate whether to raise an exception if ``value`` does
+        not represent a date/time.  Defaults to ``True``.
 
 
-    :raise OverflowError: Raised if the parsed date exceeds the largest
-        valid C integer on your system.
+    :return: The date/time represented by ``value``, ``None`` if ``value`` is ``None`` or an empty
+            string, whatever ``strict``, or if
+        ``value`` does not represent a date/time and ``strict`` is
+        ``False``.
 
-    :raise ValueError: If ``strict`` is ```True``` and ``value`` does not
-        represent a valid date/time or the string format is unknown.
+
+    :raise OverflowError: If the parsed date exceeds the largest valid C
+        integer on the system.
+
+    :raise ValueError: If ``strict`` is ``True`` and ``value`` does not
+        represent a date/time.
     """
     try:
         timestamp = None if any_utils.is_empty_or_none(value) \
@@ -729,10 +715,6 @@ def string_to_timestamp(
             raise
         timestamp = None
 
-    if timestamp is None:
-        if strict:
-            f"The string \"{value}\" does not represent a timestamp"
-
     return timestamp
 
 
@@ -741,24 +723,24 @@ def string_to_version(
         strict: bool = True
 ) -> Version | None:
     """
-    Convert a string representation of a version value to its
-    corresponding version.
+    Convert a string representation of a version to a ``Version``.
 
 
-    :param value: The input to be converted into a version.
+    :param value: The string to convert, complying with Semantic Versioning
+        2.0.0 (e.g., ``1.4.1``), a ``Version`` (returned unchanged), or
+        ``None``.
 
-    :param strict: A boolean flag indicating whether to enforce strict
-        validation.  If ``True``, a ``ValueError`` is raised for invalid
-        version strings complying with Semantic Version 2.  If ``False``,
-        the function returns ``None`` for invalid version strings.
-
-
-    :return: The ``Version`` instance corresponding to the string.
+    :param strict: Indicate whether to raise an exception if ``value`` does
+        not represent a version.  Defaults to ``True``.
 
 
-    :raise ValueError: If ``strict`` is ```True``` and ``value`` does not
-        represent a valid version or the string doesn't comply to Semantic
-        Version 2.
+    :return: The ``Version`` represented by ``value``, ``None`` if ``value`` is ``None`` or an empty
+            string, whatever ``strict``, or if
+        ``value`` does not represent a version and ``strict`` is ``False``.
+
+
+    :raise ValueError: If ``strict`` is ``True`` and ``value`` does not
+        represent a version.
     """
     try:
         version = None if any_utils.is_empty_or_none(value) \
@@ -769,10 +751,6 @@ def string_to_version(
             raise
         version = None
 
-    if version is None:
-        if strict:
-            f"The string \"{value}\" does not represent a version"
-
     return version
 
 
@@ -781,30 +759,23 @@ def string_to_uuid(
         strict: bool = True
 ) -> UUID | None:
     """
-    Convert a string representation of a UUID into a UUID object.
-
-    This function attempts to parse the given string into a UUID object.
-    If the string is not a valid UUID and strict mode is enabled, a
-    ``ValueError`` is raised.  If strict mode is disabled, the function
-    returns ``None`` when the string is not a valid UUID.
+    Convert a string representation of a UUID to a ``UUID``.
 
 
-    :param value: The string to be converted into a UUID.  It should
-        represent a valid UUID.  If the string is empty or ``None``, the
-        function returns ``None``.
+    :param value: The string to convert, a ``UUID`` (returned unchanged), or
+        ``None``.
 
-    :param strict: A boolean flag indicating whether to enforce strict
-        validation.  If ``True``, a ``ValueError`` is raised for invalid
-        UUID strings.  If ``False``, the function returns ``None`` for
-        invalid UUID strings.
+    :param strict: Indicate whether to raise an exception if ``value`` does
+        not represent a UUID.  Defaults to ``True``.
 
 
-    :return: A UUID object corresponding to the given string, or ``None``
-        if the string is invalid and strict mode is disabled.
+    :return: The ``UUID`` represented by ``value``, ``None`` if ``value`` is ``None`` or an empty
+            string, whatever ``strict``, or if
+        ``value`` does not represent a UUID and ``strict`` is ``False``.
 
 
-    :raises ValueError: If ``strict`` is ``True`` and the string is not a
-        valid UUID.
+    :raise ValueError: If ``strict`` is ``True`` and ``value`` does not
+        represent a UUID.
     """
     try:
         uuid = None if any_utils.is_empty_or_none(value) \
@@ -815,10 +786,6 @@ def string_to_uuid(
             raise
         uuid = None
 
-    if uuid is None:
-        if strict:
-            f"The string \"{value}\" does not represent a UUID"
-
     return uuid
 
 
@@ -826,7 +793,7 @@ DATA_TYPE_CONVERTERS: dict[DataType, Callable] = {
     DataType.BOOLEAN: string_to_boolean,
     DataType.DATE: string_to_date,
     DataType.DECIMAL: string_to_decimal,
-    # DataType.EMAIL_ADDRESS: __convert_to_email_address,
+    DataType.EMAIL_ADDRESS: string_to_email_address,
     DataType.ENUMERATION: lambda value, **kwargs: string_to_enumeration_member(value, **kwargs),
     DataType.INTEGER: string_to_integer,
     DataType.IPV4: string_to_ipv4,

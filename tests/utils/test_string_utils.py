@@ -21,9 +21,51 @@
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+import datetime
+
 import pytest
 
+from thelittlehackers.utils import string_utils
+
+from thelittlehackers.utils.string_utils import is_valid_email_address
+from thelittlehackers.utils.string_utils import string_to_email_address
 from thelittlehackers.utils.string_utils import string_to_keywords
+
+
+@pytest.mark.parametrize(
+    'value',
+    ['jane.doe@example.com', 'Jane.Doe@Example.COM', '  jane+news@example.co.uk\n'],
+)
+def test_is_valid_email_address(value):
+    assert is_valid_email_address(value)
+
+
+@pytest.mark.parametrize(
+    'value',
+    [None, '', '   ', 'jane.doe', 'jane.doe@', '@example.com', 'jane.doe@example.com, john@example.com'],
+)
+def test_is_valid_email_address_with_invalid_value(value):
+    assert not is_valid_email_address(value)
+
+
+@pytest.mark.parametrize(
+    ('value', 'expected_email_address'),
+    [
+        ('jane.doe@example.com', 'jane.doe@example.com'),
+        ('Jane.Doe@Example.COM', 'jane.doe@example.com'),
+        ('  jane.doe@example.com\n', 'jane.doe@example.com'),
+    ],
+)
+def test_string_to_email_address(value, expected_email_address):
+    assert string_to_email_address(value) == expected_email_address
+
+
+@pytest.mark.parametrize('value', [None, '', 'jane.doe'])
+def test_string_to_email_address_with_invalid_value(value):
+    with pytest.raises(ValueError):
+        string_to_email_address(value)
+
+    assert string_to_email_address(value, strict=False) is None
 
 
 @pytest.mark.parametrize(
@@ -91,3 +133,75 @@ def test_string_to_keywords_with_minimal_length():
     assert sorted(string_to_keywords("Le petit chat de Đà Lạt", keyword_minimal_length=2)) == [
         'chat', 'lat', 'petit'
     ]
+
+
+@pytest.mark.parametrize(
+    'converter',
+    [
+        string_utils.string_to_date,
+        string_utils.string_to_decimal,
+        string_utils.string_to_integer,
+        string_utils.string_to_locale,
+        string_utils.string_to_time,
+        string_utils.string_to_timestamp,
+        string_utils.string_to_uuid,
+        string_utils.string_to_version,
+    ],
+)
+@pytest.mark.parametrize('value', [None, '', '   '])
+def test_converter_with_no_value(converter, value):
+    assert converter(value, strict=True) is None
+
+
+@pytest.mark.parametrize(
+    'value',
+    ['01-23-45-67-89-AB', '01:23:45:67:89:AB', '0123456789AB', '0123.4567.89AB'],
+)
+def test_string_to_mac_address(value):
+    assert string_utils.string_to_mac_address(value) == ('01', '23', '45', '67', '89', 'AB')
+
+
+@pytest.mark.parametrize('value', [None, '', '01-23-45-67-89', '01-23-45-67-89-GH'])
+def test_string_to_mac_address_with_invalid_value(value):
+    with pytest.raises(ValueError):
+        string_utils.string_to_mac_address(value)
+
+    assert string_utils.string_to_mac_address(value, strict=False) is None
+
+
+@pytest.mark.parametrize(
+    'value',
+    ['2026-10-13', '2026-10-13T08:30:00', datetime.date(2026, 10, 13), datetime.datetime(2026, 10, 13, 8, 30)],
+)
+def test_string_to_date(value):
+    date = string_utils.string_to_date(value)
+    assert type(date) is datetime.date
+    assert date == datetime.date(2026, 10, 13)
+
+
+@pytest.mark.parametrize(
+    ('value', 'expected_boolean'),
+    [(True, True), ('yes', True), (' True ', True), ('1', True), (False, False), ('N', False), ('false\n', False)],
+)
+def test_string_to_boolean(value, expected_boolean):
+    assert string_utils.string_to_boolean(value, strict=True) is expected_boolean
+
+
+@pytest.mark.parametrize('value', [None, '', 'maybe'])
+def test_string_to_boolean_with_invalid_value(value):
+    with pytest.raises(ValueError):
+        string_utils.string_to_boolean(value, strict=True)
+
+    assert string_utils.string_to_boolean(value, default_value=True) is True
+
+
+def test_string_to_ipv4():
+    assert string_utils.string_to_ipv4('192.168.1.1') == (192, 168, 1, 1)
+
+
+@pytest.mark.parametrize('value', [None, '', '256.168.1.1', '192.168.1'])
+def test_string_to_ipv4_with_invalid_value(value):
+    with pytest.raises(ValueError):
+        string_utils.string_to_ipv4(value)
+
+    assert string_utils.string_to_ipv4(value, strict=False) is None

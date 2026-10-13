@@ -23,8 +23,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Sized
+from numbers import Number
 from typing import Any
-from typing import Sized
 from typing import SupportsFloat
 from typing import SupportsInt
 from uuid import UUID
@@ -32,27 +33,29 @@ from uuid import UUID
 
 def is_empty_or_none(value: Any) -> bool:
     """
-    Checks if the specified value is empty or ``None``.
+    Check whether a value is ``None`` or empty.
 
-    A value is considered empty or ``None`` if it is:
-    - `None`
-    - An empty string (after stripping whitespace)
-    - An empty collection (e.g., ``list``, ``tuple``, ``set``, etc.)
-    - An object that evaluates to ``False`` (e.g., empty lists, empty
-      dictionaries, etc.)
+    A value is empty if it is:
 
-    Numeric types (integers, floats) and boolean values are never
-    considered empty.
+    - A string that is empty or contains only whitespace.
+    - A collection with no items (e.g., ``list``, ``tuple``, ``set``,
+      ``dict``).
+    - Any other object that is falsy, except a number.
+
+    A number (including a boolean) is never empty, even if it is zero.
 
 
-    :param value: The value to check for being empty or ``None``.  This
-        can be of any type.
+    :param value: The value to check, of any type.
 
-    :return: ``True`` if the value is empty or ``None``, ``False`` otherwise.
+
+    :return: ``True`` if the value is ``None`` or empty; ``False``
+        otherwise.
     """
     if value is None:
         return True
-    elif isinstance(value, (bool, float, int)):
+    elif isinstance(value, Number):
+        # A number is never empty, including zero (e.g., `Decimal(0)`,
+        # which is falsy).
         return False
     elif isinstance(value, str):
         return len(value.strip()) == 0
@@ -64,26 +67,24 @@ def is_empty_or_none(value: Any) -> bool:
 
 def is_integer(value: int | str | SupportsInt | None) -> bool:
     """
-    Check if the provided input represents an integer or can be converted
-    to one.
+    Check whether a value is an integer or can be converted to an integer.
 
-    This function determines whether the input is an integer, a string
-    that represents an integer, or any type that implements the ``__int__``
-    method (via the `SupportsInt` protocol).  If the input is ``None`` or
-    cannot be converted to an integer, the function returns ``False``.
-
-
-    :param value: The input to check, which may be an integer or a value
-        that can be converted to an integer.
+    A value can be converted to an integer if it implements ``__int__``
+    (e.g., a ``float``, which is truncated, or a ``bool``), or if it is a
+    string representing an integer in base 10 (e.g., ``"42"``,
+    ``" -42 "``).
 
 
-    :return: ``True`` if the input is an integer or can be converted to an
+    :param value: The value to check, or ``None``.
+
+
+    :return: ``True`` if the value is an integer or can be converted to an
         integer; ``False`` otherwise.
     """
     if value is None:
         return False
 
-    if isinstance(value, (int, SupportsInt)):
+    if isinstance(value, SupportsInt):
         return True
 
     try:
@@ -95,27 +96,24 @@ def is_integer(value: int | str | SupportsInt | None) -> bool:
 
 def is_numeric(value: float | str | SupportsFloat | None) -> bool:
     """
-    Check if the provided input represents a numeric value or can be
-    converted to one.
+    Check whether a value is a number or can be converted to a floating
+    point number.
 
-    This function determines whether the input is a floating point number,
-    a string that represents a numeric value, or any type that implements
-    the ``__float__`` method (via the `SupportsFloat` protocol).  If the
-    input is ``None`` or cannot be converted to a floating point number,
-    the function returns ``False``.
+    A value can be converted to a floating point number if it implements
+    ``__float__`` (e.g., an ``int``, a ``Decimal``), or if it is a string
+    representing a decimal number (e.g., ``"3.14"``, ``"1e-3"``,
+    ``"nan"``, ``"inf"``).
 
-    :param value: The input to check, which can be a float, a string
-        representation of a numeric value, a type that supports conversion to
-        a floating point number, or ``None``.
 
-    :return: ``True`` if the input is a floating point number or can be
-        converted to a numeric value; ``False`` otherwise.
+    :param value: The value to check, or ``None``.
+
+
+    :return: ``True`` if the value is a floating point number or can be
+        converted to one; ``False`` otherwise.
     """
     if value is None:
         return False
 
-    if isinstance(value, float):
-        return True
     try:
         float(value)
         return True
@@ -125,24 +123,28 @@ def is_numeric(value: float | str | SupportsFloat | None) -> bool:
 
 def is_uuid(value: str | UUID | None) -> bool:
     """
-    Check if the provided input represents a Universally Unique Identifier
-    (UUID).
+    Check whether a value is a Universally Unique Identifier (UUID) or a
+    string representation of a UUID.
+
+    The string representation can be in any format that the ``UUID``
+    constructor accepts (e.g., with or without hyphens and braces, in
+    any case).
 
 
-    :param value: The input to check, which can be a string representation
-        of a UUID, a UUID object, or ``None``.
+    :param value: The value to check, or ``None``.
 
 
-    :return: ``True`` if the input is a UUID object or can be converted to
-        a UUID; ``False`` otherwise.
+    :return: ``True`` if the value is a ``UUID`` or a string representation
+        of a UUID; ``False`` otherwise.
     """
-    if value is None:
-        return False
-
     if isinstance(value, UUID):
         return True
 
+    if not isinstance(value, str):
+        return False
+
     try:
-        return UUID(value) is not None
-    except (TypeError, ValueError):
+        UUID(value)
+        return True
+    except ValueError:
         return False

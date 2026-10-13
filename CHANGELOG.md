@@ -4,6 +4,46 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.2] - 2026-10-13
+### Changed
+- Rewrite the docstrings of the functions of `string_utils` to describe
+  their actual behavior (e.g., `string_to_enumeration_member` raises a
+  `TypeError`, not a `ValueError`, if `enumeration` is not an
+  enumeration class; `string_to_boolean` returns `default_value`, not
+  `None`, for an unrecognized string).
+- Rewrite the docstrings of the functions of `any_utils` to describe
+  their actual behavior (e.g., `is_integer` returns `True` for a
+  `float`, which can be truncated to an integer).
+- `string_to_email_address` is typed to return `str | None` when
+  `strict` is `False`, and `str` otherwise.
+
+### Fixed
+- `is_valid_email_address`, and therefore `string_to_email_address`,
+  check the whole string: a string that only starts with a valid email
+  address (e.g., "jane@example.com, john@example.com") is no longer
+  considered valid.
+- Remove the statements of `string_to_date`, `string_to_decimal`,
+  `string_to_integer`, `string_to_locale`, `string_to_time`,
+  `string_to_timestamp`, `string_to_uuid`, and `string_to_version` that
+  built an error message without raising it.  These functions keep
+  returning `None` for `None` or an empty string, even when `strict` is
+  `True`, as their callers rely on it; this is now documented and
+  tested.
+- `string_to_mac_address` returns a tuple of six strings of two
+  hexadecimal digits (e.g., `('01', '23', '45', '67', '89', 'AB')`), as
+  its documentation states, instead of a tuple of lists of characters
+  (e.g., `(['0', '1'], ['2', '3'], ...)`).
+- `string_to_date` returns the date part of a `datetime.datetime`
+  instead of the `datetime.datetime` itself.
+- `any_utils.is_empty_or_none` never considers a number as empty, as its
+  documentation states, including the numbers that are falsy when equal
+  to zero (e.g., `Decimal(0)`, `Fraction(0)`).
+- `any_utils.is_uuid` returns `False` for a value that is neither a
+  string nor a `UUID` (e.g., an integer), instead of raising an
+  `AttributeError`.
+- `string_to_boolean` ignores the surrounding whitespace of the string
+  (e.g., `" yes "` returns `True` instead of the default value).
+
 ## [1.4.1] - 2026-10-12
 ### Changed
 - Replace the libraries `unidecode` (GPLv2+) and `normality` (which
