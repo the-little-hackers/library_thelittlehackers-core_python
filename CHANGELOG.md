@@ -32,6 +32,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (e.g., `(['0', '1'], ['2', '3'], ...)`).
 - `string_to_date` returns the date part of a `datetime.datetime`
   instead of the `datetime.datetime` itself.
+- `any_utils.is_empty_or_none` never considers a number as empty, as its
+  documentation states, including the numbers that are falsy when equal
+  to zero (e.g., `Decimal(0)`, `Fraction(0)`).
 - `string_to_boolean` ignores the surrounding whitespace of the string
   (e.g., `" yes "` returns `True` instead of the default value).
 

@@ -23,6 +23,7 @@
 
 from __future__ import annotations
 
+from numbers import Number
 from typing import Any
 from typing import Sized
 from typing import SupportsFloat
@@ -52,7 +53,9 @@ def is_empty_or_none(value: Any) -> bool:
     """
     if value is None:
         return True
-    elif isinstance(value, (bool, float, int)):
+    elif isinstance(value, Number):
+        # A number is never empty, including zero (e.g., `Decimal(0)`,
+        # which is falsy).
         return False
     elif isinstance(value, str):
         return len(value.strip()) == 0
