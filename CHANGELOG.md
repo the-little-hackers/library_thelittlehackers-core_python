@@ -14,6 +14,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   check the whole string: a string that only starts with a valid email
   address (e.g., "jane@example.com, john@example.com") is no longer
   considered valid.
+- Remove the statements of `string_to_date`, `string_to_decimal`,
+  `string_to_integer`, `string_to_locale`, `string_to_time`,
+  `string_to_timestamp`, `string_to_uuid`, and `string_to_version` that
+  built an error message without raising it.  These functions keep
+  returning `None` for `None` or an empty string, even when `strict` is
+  `True`, as their callers rely on it; this is now documented and
+  tested.
 
 ## [1.4.1] - 2026-10-12
 ### Changed

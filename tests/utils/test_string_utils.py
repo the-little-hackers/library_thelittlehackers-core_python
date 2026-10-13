@@ -23,6 +23,8 @@
 
 import pytest
 
+from thelittlehackers.utils import string_utils
+
 from thelittlehackers.utils.string_utils import is_valid_email_address
 from thelittlehackers.utils.string_utils import string_to_email_address
 from thelittlehackers.utils.string_utils import string_to_keywords
@@ -129,3 +131,21 @@ def test_string_to_keywords_with_minimal_length():
     assert sorted(string_to_keywords("Le petit chat de Đà Lạt", keyword_minimal_length=2)) == [
         'chat', 'lat', 'petit'
     ]
+
+
+@pytest.mark.parametrize(
+    'converter',
+    [
+        string_utils.string_to_date,
+        string_utils.string_to_decimal,
+        string_utils.string_to_integer,
+        string_utils.string_to_locale,
+        string_utils.string_to_time,
+        string_utils.string_to_timestamp,
+        string_utils.string_to_uuid,
+        string_utils.string_to_version,
+    ],
+)
+@pytest.mark.parametrize('value', [None, '', '   '])
+def test_converter_with_no_value(converter, value):
+    assert converter(value, strict=True) is None

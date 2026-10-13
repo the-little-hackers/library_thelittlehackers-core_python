@@ -202,10 +202,6 @@ def string_to_date(
             raise
         date = None
 
-    if date is None:
-        if strict:
-            f"The string \"{value}\" does not represent a date"
-
     return date
 
 
@@ -240,10 +236,6 @@ def string_to_decimal(
         if strict:
             raise
         decimal = None
-
-    if decimal is None:
-        if strict:
-            f"The string \"{value}\" does not represent a floating number"
 
     return decimal
 
@@ -401,10 +393,6 @@ def string_to_integer(
         if strict:
             raise
         integer = None
-
-    if integer is None:
-        if strict:
-            f"The string \"{value}\" does not represent an integer"
 
     return integer
 
@@ -574,10 +562,6 @@ def string_to_locale(
             raise exception
         locale = None
 
-    if locale is None:
-        if strict:
-            f"The string \"{value}\" does not represent a locale"
-
     return locale
 
 
@@ -702,10 +686,6 @@ def string_to_time(
                 raise
             time = None
 
-    if time is None:
-        if strict:
-            f"The string \"{value}\" does not represent a time"
-
     return time
 
 
@@ -744,10 +724,6 @@ def string_to_timestamp(
             raise
         timestamp = None
 
-    if timestamp is None:
-        if strict:
-            f"The string \"{value}\" does not represent a timestamp"
-
     return timestamp
 
 
@@ -783,10 +759,6 @@ def string_to_version(
         if strict:
             raise
         version = None
-
-    if version is None:
-        if strict:
-            f"The string \"{value}\" does not represent a version"
 
     return version
 
@@ -829,10 +801,6 @@ def string_to_uuid(
         if strict:
             raise
         uuid = None
-
-    if uuid is None:
-        if strict:
-            f"The string \"{value}\" does not represent a UUID"
 
     return uuid
 
