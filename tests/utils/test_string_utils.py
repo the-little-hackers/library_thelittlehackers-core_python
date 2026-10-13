@@ -21,6 +21,8 @@
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+import datetime
+
 import pytest
 
 from thelittlehackers.utils import string_utils
@@ -165,3 +167,13 @@ def test_string_to_mac_address_with_invalid_value(value):
         string_utils.string_to_mac_address(value)
 
     assert string_utils.string_to_mac_address(value, strict=False) is None
+
+
+@pytest.mark.parametrize(
+    'value',
+    ['2026-10-13', '2026-10-13T08:30:00', datetime.date(2026, 10, 13), datetime.datetime(2026, 10, 13, 8, 30)],
+)
+def test_string_to_date(value):
+    date = string_utils.string_to_date(value)
+    assert type(date) is datetime.date
+    assert date == datetime.date(2026, 10, 13)

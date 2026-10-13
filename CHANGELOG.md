@@ -25,6 +25,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   hexadecimal digits (e.g., `('01', '23', '45', '67', '89', 'AB')`), as
   its documentation states, instead of a tuple of lists of characters
   (e.g., `(['0', '1'], ['2', '3'], ...)`).
+- `string_to_date` returns the date part of a `datetime.datetime`
+  instead of the `datetime.datetime` itself.
 
 ## [1.4.1] - 2026-10-12
 ### Changed

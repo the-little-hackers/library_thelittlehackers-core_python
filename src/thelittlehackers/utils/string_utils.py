@@ -194,9 +194,13 @@ def string_to_date(
         represent a valid date or the string format is unknown.
     """
     try:
-        date = None if any_utils.is_empty_or_none(value) \
-            else value if isinstance(value, datetime.date) \
+        date = (
+            None if any_utils.is_empty_or_none(value)
+            # A `datetime` is also a `date`: keep its date part only.
+            else value.date() if isinstance(value, datetime.datetime)
+            else value if isinstance(value, datetime.date)
             else dateutil.parser.parse(value).date()
+        )
     except ValueError:
         if strict:
             raise
