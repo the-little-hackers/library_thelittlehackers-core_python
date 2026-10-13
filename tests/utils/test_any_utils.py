@@ -51,3 +51,23 @@ def test_is_uuid(value):
 @pytest.mark.parametrize('value', [None, '', 'not-a-uuid', 123, b'7f4df2d04f6c4a1a9b8e2d6c3f1a5e90'])
 def test_is_uuid_with_invalid_value(value):
     assert not any_utils.is_uuid(value)
+
+
+@pytest.mark.parametrize('value', [42, True, 1.5, Decimal('2.5'), '42', ' -42 '])
+def test_is_integer(value):
+    assert any_utils.is_integer(value)
+
+
+@pytest.mark.parametrize('value', [None, '', '1.5', 'abc', [1]])
+def test_is_integer_with_invalid_value(value):
+    assert not any_utils.is_integer(value)
+
+
+@pytest.mark.parametrize('value', [3.14, 42, Decimal('2.5'), '3.14', '1e-3', ' 42 ', 'nan'])
+def test_is_numeric(value):
+    assert any_utils.is_numeric(value)
+
+
+@pytest.mark.parametrize('value', [None, '', 'abc', 1j, [1]])
+def test_is_numeric_with_invalid_value(value):
+    assert not any_utils.is_numeric(value)

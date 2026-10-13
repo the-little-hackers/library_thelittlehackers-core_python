@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `TypeError`, not a `ValueError`, if `enumeration` is not an
   enumeration class; `string_to_boolean` returns `default_value`, not
   `None`, for an unrecognized string).
+- Rewrite the docstrings of the functions of `any_utils` to describe
+  their actual behavior (e.g., `is_integer` returns `True` for a
+  `float`, which can be truncated to an integer).
 - `string_to_email_address` is typed to return `str | None` when
   `strict` is `False`, and `str` otherwise.
 
