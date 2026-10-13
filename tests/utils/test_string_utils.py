@@ -193,3 +193,15 @@ def test_string_to_boolean_with_invalid_value(value):
         string_utils.string_to_boolean(value, strict=True)
 
     assert string_utils.string_to_boolean(value, default_value=True) is True
+
+
+def test_string_to_ipv4():
+    assert string_utils.string_to_ipv4('192.168.1.1') == (192, 168, 1, 1)
+
+
+@pytest.mark.parametrize('value', [None, '', '256.168.1.1', '192.168.1'])
+def test_string_to_ipv4_with_invalid_value(value):
+    with pytest.raises(ValueError):
+        string_utils.string_to_ipv4(value)
+
+    assert string_utils.string_to_ipv4(value, strict=False) is None

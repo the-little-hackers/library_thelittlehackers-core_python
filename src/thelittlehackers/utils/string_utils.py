@@ -30,9 +30,11 @@ import string
 import unicodedata
 from enum import Enum, StrEnum
 from re import Pattern
-from typing import Callable, cast, Any, Literal, LiteralString
-from typing import overload
+from typing import Callable
+from typing import Literal
 from typing import TypeVar
+from typing import cast
+from typing import overload
 from uuid import UUID
 
 from anyascii import anyascii
@@ -337,7 +339,7 @@ def string_to_enumeration_member(
         the name nor the value of a member of ``enumeration``.
     """
     if not isinstance(enumeration, type):
-        raise TypeError(f"'enumeration' must be an StrEnum class, got {enumeration!r}")
+        raise TypeError(f"'enumeration' must be an enumeration class, got {enumeration!r}")
 
     if not issubclass(enumeration, Enum):
         raise TypeError(f"'enumeration' must be a subclass of Enum, got {enumeration!r}")
@@ -436,20 +438,15 @@ def string_to_ipv4(
         empty, or not an IPv4 address.
     """
     match = None if any_utils.is_empty_or_none(value) else REGEX_IPV4.match(value)
-    ipv4_address = match and match.group(0).split('.')
-
-    if ipv4_address is None:
+    if match is None:
         if strict:
-            raise ValueError(
-                f"The string \"{value}\" does not represent a IPV4 address"
-            )
-    else:
-        ipv4_address = tuple(
-            int(component)
-            for component in ipv4_address
-        )
+            raise ValueError(f"The string \"{value}\" does not represent an IPv4 address")
+        return None
 
-    return ipv4_address
+    return cast(
+        tuple[int, int, int, int],
+        tuple(int(byte) for byte in match.group(0).split('.'))
+    )
 
 
 def string_to_keywords(
