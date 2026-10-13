@@ -23,7 +23,7 @@
 
 [project]
 name = "thelittlehackers-core"
-version = "1.4.1"
+version = "1.4.2"
 description = "Collection of reusable Python components to share with Python projects"
 readme = "README.md"
 license = "MIT"
