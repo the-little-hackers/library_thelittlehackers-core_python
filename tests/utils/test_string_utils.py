@@ -177,3 +177,19 @@ def test_string_to_date(value):
     date = string_utils.string_to_date(value)
     assert type(date) is datetime.date
     assert date == datetime.date(2026, 10, 13)
+
+
+@pytest.mark.parametrize(
+    ('value', 'expected_boolean'),
+    [(True, True), ('yes', True), (' True ', True), ('1', True), (False, False), ('N', False), ('false\n', False)],
+)
+def test_string_to_boolean(value, expected_boolean):
+    assert string_utils.string_to_boolean(value, strict=True) is expected_boolean
+
+
+@pytest.mark.parametrize('value', [None, '', 'maybe'])
+def test_string_to_boolean_with_invalid_value(value):
+    with pytest.raises(ValueError):
+        string_utils.string_to_boolean(value, strict=True)
+
+    assert string_utils.string_to_boolean(value, default_value=True) is True

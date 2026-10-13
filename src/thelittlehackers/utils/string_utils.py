@@ -152,13 +152,12 @@ def string_to_boolean(
     if isinstance(value, bool):
         return value
 
-    if isinstance(value, str):
-        value = value.lower()
+    normalized_value = value.strip().lower() if isinstance(value, str) else value
 
-    if value in ('yes', 'y', 'true', 't', '1'):
+    if normalized_value in ('yes', 'y', 'true', 't', '1'):
         return True
 
-    if value in ('no', 'n', 'false', 'f', '0'):
+    if normalized_value in ('no', 'n', 'false', 'f', '0'):
         return False
 
     if strict:

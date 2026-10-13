@@ -27,6 +27,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (e.g., `(['0', '1'], ['2', '3'], ...)`).
 - `string_to_date` returns the date part of a `datetime.datetime`
   instead of the `datetime.datetime` itself.
+- `string_to_boolean` ignores the surrounding whitespace of the string
+  (e.g., `" yes "` returns `True` instead of the default value).
 
 ## [1.4.1] - 2026-10-12
 ### Changed
