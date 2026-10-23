@@ -23,7 +23,7 @@
 
 [project]
 name = "thelittlehackers-core"
-version = "1.4.3"
+version = "1.4.4"
 description = "Collection of reusable Python components to share with Python projects"
 readme = "README.md"
 license = "MIT"
@@ -39,7 +39,6 @@ dependencies = [
     "phonenumbers (>=9.0.35,<10.0.0)",
     "pydantic (>=2.13.4,<3.0.0)",
     "python-dateutil (>=2.9.0,<3.0.0)",
-    "toml (>=0.10.2,<0.11.0)",
 ]
 dynamic = ["classifiers"]
 
