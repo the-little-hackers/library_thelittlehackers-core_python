@@ -25,11 +25,11 @@ from __future__ import annotations
 
 import os
 import re
+import tomllib
 from os import PathLike
 from typing import ClassVar
 from typing import Optional
 
-import toml
 from pydantic import BaseModel
 from pydantic import Field
 from pydantic import field_validator
@@ -186,18 +186,36 @@ class Version(BaseModel):
         :raise FileNotFoundError: If the ``pyproject.toml`` file is not found
             and ``strict`` is ``True``.
 
-        :raise KeyError: If the ``version`` key is missing in the
-            ``pyproject.toml`` file and ``strict`` is ``True``.
+        :raise KeyError: If the project declares no version in the
+            ``pyproject.toml`` file (e.g., a ``dynamic`` version) and
+            ``strict`` is ``True``.
+
+        :raise tomllib.TOMLDecodeError: If the ``pyproject.toml`` file is not
+            valid TOML and ``strict`` is ``True``.
+
+        :raise ValueError: If the version is not a valid version string and
+            ``strict`` is ``True``.
         """
         pyproject_path_file_name = os.path.join(project_root_path, 'pyproject.toml')
         try:
-            with open(pyproject_path_file_name, mode='rt') as fd:
-                data = toml.load(fd)
-            version_str = data.get('project', {}).get('version') or data['tool']['poetry']['version']
+            # TOML files are encoded in UTF-8: read them as bytes.
+            with open(pyproject_path_file_name, mode='rb') as fd:
+                data = tomllib.load(fd)
+
+            version_str = (
+                    data.get('project', {}).get('version')
+                    or data.get('tool', {}).get('poetry', {}).get('version')
+            )
+            if not version_str:
+                raise KeyError(
+                    f"The file \"{pyproject_path_file_name}\" declares no version, neither under "
+                    "`[project]` nor under `[tool.poetry]`"
+                )
+
             return cls.from_string(version_str)
-        except (FileNotFoundError, KeyError) as exception:
+        except (FileNotFoundError, KeyError, tomllib.TOMLDecodeError, ValueError):
             if strict:
-                raise exception
+                raise
 
         return None
 

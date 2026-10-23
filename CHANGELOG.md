@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.4] - 2026-10-23
+
+### Fixed
+
+- `Version.from_pyproject` with `strict=False` returns `None`, as documented,
+  when the file `pyproject.toml` is not valid TOML or declares an invalid
+  version: it raised `TOMLDecodeError` or `ValueError`.
+- `Version.from_pyproject` raises a `KeyError` that tells that the file
+  declares no version (e.g., a `dynamic` version), instead of `KeyError:
+  'tool'`, and re-raises the original exception.
+
+### Changed
+
+- `Version.from_pyproject` reads the file with the standard `tomllib`, as UTF-8
+  bytes, instead of the unmaintained `toml`, which is no longer a
+  dependency.
+
 ## [1.4.3] - 2026-10-14
 
 ### Added
