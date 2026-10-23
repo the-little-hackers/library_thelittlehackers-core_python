@@ -203,8 +203,8 @@ class Version(BaseModel):
                 data = tomllib.load(fd)
 
             version_str = (
-                    data.get('project', {}).get('version')
-                    or data.get('tool', {}).get('poetry', {}).get('version')
+                data.get('project', {}).get('version')
+                or data.get('tool', {}).get('poetry', {}).get('version')
             )
             if not version_str:
                 raise KeyError(
