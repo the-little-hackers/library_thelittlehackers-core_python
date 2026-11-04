@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.5] - 2026-11-04
+
+### Changed
+
+- `Version.from_pyproject` is overloaded so that type checkers infer
+  `Version` (not `Version | None`) when `strict` is `True` or omitted.
+- `Version.__eq__` accepts any `object`, as the signature of
+  `object.__eq__` requires, and returns `NotImplemented` when the other
+  operand is not a `Version`, instead of raising an `AttributeError`.
+
 ## [1.4.4] - 2026-10-23
 
 ### Fixed

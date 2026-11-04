@@ -28,7 +28,9 @@ import re
 import tomllib
 from os import PathLike
 from typing import ClassVar
+from typing import Literal
 from typing import Optional
+from typing import overload
 
 from pydantic import BaseModel
 from pydantic import Field
@@ -135,7 +137,6 @@ class Version(BaseModel):
             raise ValueError("Version components must be non-negative.")
         return value
 
-
     @classmethod
     def from_file(cls, path: PathLike, file_name: str | None = None) -> Version:
         """
@@ -155,6 +156,32 @@ class Version(BaseModel):
             version_str = fd.read().strip()
         return cls.from_string(version_str)
 
+    @overload
+    @classmethod
+    def from_pyproject(
+            cls,
+            project_root_path: PathLike,
+            strict: Literal[True] = True
+    ) -> Version:
+        ...
+
+    @overload
+    @classmethod
+    def from_pyproject(
+            cls,
+            project_root_path: PathLike,
+            strict: Literal[False]
+    ) -> Version | None:
+        ...
+
+    @overload
+    @classmethod
+    def from_pyproject(
+            cls,
+            project_root_path: PathLike,
+            strict: bool
+    ) -> Version | None:
+        ...
 
     @classmethod
     def from_pyproject(
@@ -249,7 +276,9 @@ class Version(BaseModel):
 
         return version
 
-    def __eq__(self, other: Version) -> bool:
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Version):
+            return NotImplemented
         return (self.major, self.minor or 0, self.patch or 0) == (other.major, other.minor or 0, other.patch or 0)
 
     def __gt__(self, other: Version) -> bool:
