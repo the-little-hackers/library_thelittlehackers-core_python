@@ -85,3 +85,9 @@ def test_a_missing_file(tmp_path):
         Version.from_pyproject(tmp_path)
 
     assert Version.from_pyproject(tmp_path, strict=False) is None
+
+
+def test_equality_with_a_value_that_is_not_a_version():
+    assert Version(major=1) != '1.0.0'
+    assert Version(major=1) != None  # noqa: E711
+    assert Version(major=1) == Version.from_string('1.0.0')
