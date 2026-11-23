@@ -5,6 +5,38 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.0] - 2026-11-23
+
+### Added
+
+- `Locale` supports the BCP 47 script subtag (ISO 15924), with the
+  optional attribute `script_code` (e.g., `zho-Hans`, `zho-Hant-HK`),
+  so that Simplified and Traditional Chinese can be distinguished
+  independently of the region.
+- `Locale.decompose_locale_tag` returns the language, script and
+  country codes of a locale.
+- `Locale.match` returns the degree of similarity between two locales
+  as a `LocaleMatch` (`IDENTICAL`, `SCRIPT`, `LANGUAGE`, `DIFFERENT`),
+  to select the best available locale for a requested one.
+- The constant `ISO_15924_CODES` lists the ISO 15924 script codes, and
+  `Locale.is_script_code`, `Locale.is_iso_15924_code` and
+  `Locale.assert_script_code` check them.
+
+### Changed
+
+- `Locale.from_string`, `Locale.to_string`, `Locale.to_http_string`,
+  `Locale.compose_locale`, the JSON serialization, and the equality
+  and hash of a locale take the script into account.  Locales without
+  a script are parsed and serialized exactly as before.
+- In non-strict mode, `Locale.from_string` accepts subtags written in
+  any case (e.g., `zh_hant_hk`) and returns them in their canonical
+  case.
+- `Locale.decompose_locale` raises `MalformedLocaleException` for a
+  locale with a script: use `Locale.decompose_locale_tag` instead.
+- The groups of the regular expressions `REGEX_PATTERN_LOCALE` and
+  `REGEX_PATTERN_PERMISSIVE_LOCALE` are now the language, script and
+  country codes.
+
 ## [1.4.5] - 2026-11-04
 
 ### Changed
