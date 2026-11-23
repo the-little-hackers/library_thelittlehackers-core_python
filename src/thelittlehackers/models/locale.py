@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import json
 import re
+from enum import IntEnum
 from typing import Optional
 
 from pydantic import BaseModel
@@ -32,6 +33,7 @@ from pydantic import Field
 from pydantic import field_validator
 from pydantic import model_serializer
 
+from thelittlehackers.constants.locale import ISO_15924_CODES
 from thelittlehackers.constants.locale import ISO_3166_1_ALPHA_2_CODES
 from thelittlehackers.constants.locale import ISO_639_1_CODES
 from thelittlehackers.constants.locale import ISO_639_1_CODES_TO_ISO_639_3_CODES
@@ -40,10 +42,18 @@ from thelittlehackers.utils import any_utils
 
 
 REGEX_PATTERN_LANGUAGE_CODE = r'[a-z]{2,3}'
+REGEX_PATTERN_SCRIPT_CODE = r'[A-Z][a-z]{3}'
 REGEX_PATTERN_COUNTRY_CODE = r'[A-Z]{2}'
-REGEX_PATTERN_LOCALE = r'(([a-z]{2,3})-([A-Z]{2})$)|([a-z]{2,3}$)'
+
+# A locale tag `language[-Script][-REGION]`, e.g., `eng`, `eng-US`,
+# `zho-Hans`, or `zho-Hant-HK`.  The groups are the language, the script
+# and the country codes.
+REGEX_PATTERN_LOCALE = r'([a-z]{2,3})(?:-([A-Z][a-z]{3}))?(?:-([A-Z]{2}))?$'
 REGEX_PATTERN_JAVA_LOCALE = r'(([a-z]{2})-([A-Z]{2})$)|([a-z]{2}$)'
-REGEX_PATTERN_PERMISSIVE_LOCALE = r'(([a-z]{2,3})[-_]([A-Za-z]{2})$)|([a-z]{2,3}$)'
+
+# A locale tag whose subtags are written in any case and separated with
+# a dash `-` or an underscore `_` character (e.g., `zh_hant_hk`).
+REGEX_PATTERN_PERMISSIVE_LOCALE = r'([A-Za-z]{2,3})(?:[-_]([A-Za-z]{4}))?(?:[-_]([A-Za-z]{2}))?$'
 
 REGEX_LOCALE = re.compile(REGEX_PATTERN_LOCALE)
 REGEX_JAVA_LOCALE = re.compile(REGEX_PATTERN_JAVA_LOCALE)
@@ -67,6 +77,35 @@ class InvalidLanguageCodeException(ValueError):
     """
     Indicate that a string doesn't match a valid language code.
     """
+
+
+class InvalidScriptCodeException(ValueError):
+    """
+    Indicate that a string doesn't match a valid script code.
+    """
+
+
+class LocaleMatch(IntEnum):
+    """
+    The degree of similarity between two locales, from the lowest to the
+    highest, used to select the best available locale for a requested one
+    (see `Locale.match`).
+    """
+    # The locales have different languages (e.g., `eng-US` and `fra-FR`).
+    DIFFERENT = 0
+
+    # The locales have the same language, but different scripts, or only
+    # one of them defines a script (e.g., `zho-Hans` and `zho-Hant`, or
+    # `zho` and `zho-Hant`).
+    LANGUAGE = 1
+
+    # The locales have the same language and the same script (or none),
+    # but different countries (e.g., `eng-US` and `eng-GB`, or `zho-Hant`
+    # and `zho-Hant-HK`).
+    SCRIPT = 2
+
+    # The locales are identical.
+    IDENTICAL = 3
 
 
 class Locale(BaseModel):
@@ -109,10 +148,23 @@ class Locale(BaseModel):
     identifiers `en`, `de`, and `zh`).  Normal locales specify a language
     in a particular region (for example `en-GB`, `de-AT`, and `zh-SG`).
 
-    A locale is expressed by an ISO 639-3 alpha-3 code element, optionally
-    followed by a dash character `-` and an ISO 3166-1 alpha-2 code.  For
-    example: `eng` (which denotes a standard English), `eng-US` (which
-    denotes an American English).
+    Some languages are written in several scripts, which a region doesn't
+    capture: Simplified Chinese is written in mainland China and in
+    Singapore, Traditional Chinese in Taiwan, Hong Kong and Macau.  A
+    locale can thus identify the script of the language (e.g., `zho-Hans`
+    for Simplified Chinese, `zho-Hant-HK` for Traditional Chinese as used
+    in Hong Kong).
+
+    A locale is expressed, following BCP 47, by an ISO 639-3 alpha-3 code
+    element, optionally followed by a dash character `-` and an ISO 15924
+    alpha-4 code, optionally followed by a dash character `-` and an ISO
+    3166-1 alpha-2 code.  For example: `eng` (which denotes a standard
+    English), `eng-US` (which denotes an American English), `zho-Hans`
+    (which denotes a Simplified Chinese), `zho-Hant-TW` (which denotes a
+    Traditional Chinese as used in Taiwan).
+
+    @note: Variants (e.g., `de-DE-1996`), extensions (e.g., `-u-`), and UN
+        M.49 numeric regions (e.g., `es-419`) are not supported.
     """
     country_code: Optional[str] = Field(
         None,
@@ -123,6 +175,12 @@ class Locale(BaseModel):
     language_code: str = Field(
         ...,
         description="An ISO 639-3 alpha-3 code.",
+        frozen=True
+    )
+
+    script_code: Optional[str] = Field(
+        None,
+        description="An ISO 15924 alpha-4 code, written in title case (e.g., `Hans`).",
         frozen=True
     )
 
@@ -162,12 +220,31 @@ class Locale(BaseModel):
         if not cls.is_language_code(code, strict=strict):
             raise InvalidLanguageCodeException(f'Invalid language code "{code}"')
 
+    @classmethod
+    def assert_script_code(cls, code: str, strict: bool = True) -> None:
+        """
+        Check that a script code is valid.
+
+
+        :param code: A script code.
+
+        :param strict: Indicate whether the comparison of the script code
+            string is case-sensitive or not.
+
+
+        :raise InvalidScriptCodeException: If the script code passed to this
+            function doesn't match a valid script code.
+        """
+        if not cls.is_script_code(code, strict=strict):
+            raise InvalidScriptCodeException(f'Invalid script code "{code}"')
+
     def __eq__(self, other: object) -> bool:
         """
         Check whether this locale is the same as the other locale.
 
         Two locale objects are the same when they correspond to the same
-        language and the same country (unless no country is defined for both
+        language, the same script (unless no script is defined for both
+        locales), and the same country (unless no country is defined for both
         locales).
 
 
@@ -181,20 +258,11 @@ class Locale(BaseModel):
             return False
 
         return self.language_code == other.language_code and \
+            self.script_code == other.script_code and \
             self.country_code == other.country_code
 
     def __hash__(self) -> int:
-        if not hasattr(self, '__hash'):
-            encoded_locale = self.language_code if self.country_code is None \
-                else f'{self.language_code}{self.country_code}'
-
-            self.__hash = sum([
-                (ord(c) - ord('a') if ord(c) >= ord('a')
-                     else ord(c) - ord('A')) * 52**i
-                for i, c in enumerate(encoded_locale)
-            ])
-
-        return self.__hash
+        return hash((self.language_code, self.script_code, self.country_code))
 
     def __repr__(self) -> str:
         return self.to_string()
@@ -207,28 +275,41 @@ class Locale(BaseModel):
         return code if len(code) == 3 else ISO_639_1_CODES_TO_ISO_639_3_CODES[code]
 
     @staticmethod
-    def compose_locale(language_code: str, country_code: str = None) -> str:
+    def compose_locale(
+            language_code: str,
+            country_code: str | None = None,
+            script_code: str | None = None
+    ) -> str:
         """
         Return the string representation of the locale specified with an ISO
         639-3 alpha-3 code (or alpha-2 code), optionally followed by a dash
-        character `-` and an ISO 3166-1 alpha-2 code
+        character `-` and an ISO 15924 alpha-4 code, optionally followed by a
+        dash character `-` and an ISO 3166-1 alpha-2 code.
 
 
         :param language_code: An ISO 639-3 alpha-3 code (or alpha-2 code).
 
         :param country_code: An ISO 3166-1 alpha-2 code.
 
+        :param script_code: An ISO 15924 alpha-4 code.
+
 
         :return: A string representing a locale.
         """
-        return language_code if country_code is None \
-            else f'{language_code}-{country_code}'
+        return '-'.join(
+            code
+            for code in (language_code, script_code, country_code)
+            if code is not None
+        )
 
     @staticmethod
     def decompose_locale(locale: str, strict: bool = True) -> tuple[str, str | None]:
         """
         Return the decomposition of the specified locale into a language
-        and a country codes
+        and a country codes.
+
+        This function doesn't support locales with a script code: use
+        `decompose_locale_tag` instead.
 
 
         :param locale: An ISO 639-3 alpha-3 code (or alpha-2 code), optionally
@@ -244,6 +325,51 @@ class Locale(BaseModel):
         :return: A tuple `(language_code, country_code)`, where the first code
             represents an ISO 639-3 alpha-3 code (or alpha-2 code), and the
             second code an ISO 3166-1 alpha-2 code.
+
+
+        :raise ValueError: If the input is ``None``.
+
+        :raise MalformedLocaleException: If ``locale`` does not represent a
+            valid locale, or if it includes a script code.
+        """
+        language_code, script_code, country_code = Locale.decompose_locale_tag(locale, strict=strict)
+
+        if script_code is not None:
+            raise MalformedLocaleException(
+                f"The string \"{locale}\" includes a script code; use the function "
+                "\"decompose_locale_tag\""
+            )
+
+        return language_code, country_code
+
+    @staticmethod
+    def decompose_locale_tag(
+            locale: str,
+            strict: bool = True
+    ) -> tuple[str, str | None, str | None]:
+        """
+        Return the decomposition of the specified locale into a language, a
+        script, and a country codes.
+
+
+        :param locale: An ISO 639-3 alpha-3 code (or alpha-2 code), optionally
+            followed by a dash character `-` and an ISO 15924 alpha-4 code,
+            optionally followed by a dash character `-` and an ISO 3166-1
+            alpha-2 code (e.g., `eng`, `eng-US`, `zho-Hans`, `zh-Hant-HK`).
+
+        :param strict: Indicate whether the string representation of a locale
+            has to be strictly compliant with BCP 47 (lowercase language code,
+            title case script code, uppercase country code, separated with
+            dash characters), or whether subtags written in any case and
+            separated with dash or underscore characters (e.g., `zh_hant_hk`)
+            are accepted.  In the latter case, the codes are returned in their
+            canonical case.
+
+
+        :return: A tuple `(language_code, script_code, country_code)`, where
+            the first code represents an ISO 639-3 alpha-3 code (or alpha-2
+            code), the second code an ISO 15924 alpha-4 code or `None`, and
+            the third code an ISO 3166-1 alpha-2 code or `None`.
 
 
         :raise ValueError: If the input is ``None``.
@@ -267,10 +393,13 @@ class Locale(BaseModel):
                     f"The string \"{locale}\" doesn't represent any forms of a valid locale"
                 )
 
-        _, locale_language_code, locale_country_code, language_code = match.groups()
+        language_code, script_code, country_code = match.groups()
 
-        return (locale_language_code, locale_country_code.upper()) if language_code is None \
-            else (language_code, None)
+        return (
+            language_code.lower(),
+            script_code and script_code.title(),
+            country_code and country_code.upper()
+        )
 
     @classmethod
     def from_string(cls, locale: str, strict: bool = True) -> Locale | None:
@@ -281,11 +410,14 @@ class Locale(BaseModel):
 
         :param locale: A string representation of a locale, i.e., an ISO 639-3
            alpha-3 code (or alpha-2 code), optionally followed by a dash
-           character `-` and an ISO 3166-1 alpha-2 code.
+           character `-` and an ISO 15924 alpha-4 code, optionally followed by
+           a dash character `-` and an ISO 3166-1 alpha-2 code (e.g., `eng`,
+           `eng-US`, `zho-Hans`, `zh-Hant-HK`).
 
         :param strict: Indicate whether the string representation of a locale
-            has to be strictly compliant with RFC 4646, or whether a Java-style
-            locale (character `_` instead of `-`) is accepted.
+            has to be strictly compliant with BCP 47, or whether subtags
+            written in any case and separated with dash or underscore
+            characters (e.g., `zh_hant_hk`) are accepted.
 
 
         :return: A locale or `None` if the argument `locale` is undefined.
@@ -296,10 +428,11 @@ class Locale(BaseModel):
         if not locale:
             return None
 
-        language_code, country_code = cls.decompose_locale(locale, strict=strict)
+        language_code, script_code, country_code = cls.decompose_locale_tag(locale, strict=strict)
 
         return Locale(
             language_code=language_code,
+            script_code=script_code,
             country_code=country_code
         )
 
@@ -310,6 +443,10 @@ class Locale(BaseModel):
     @staticmethod
     def is_iso_3166_1_alpha_2(code: str, strict: bool = True) -> bool:
         return (code if strict else code.upper()) in ISO_3166_1_ALPHA_2_CODES
+
+    @staticmethod
+    def is_iso_15924_code(code: str, strict: bool = True) -> bool:
+        return (code if strict else code.title()) in ISO_15924_CODES
 
     @staticmethod
     def is_iso_639_2_code(code: str, strict: bool = True) -> bool:
@@ -332,7 +469,8 @@ class Locale(BaseModel):
         passed to the comparison method.
 
         Two locale objects are said similar if they have at least the same
-        language, but not necessarily the same country.
+        language, but not necessarily the same script nor the same country.
+        Use `match` for a finer comparison.
 
 
         :param other: a `Locale` object to compare with the current locale
@@ -344,6 +482,38 @@ class Locale(BaseModel):
         """
         return self.language_code == other.language_code
 
+    @classmethod
+    def is_script_code(cls, code: str, strict: bool = True) -> bool:
+        return len(code) == 4 and cls.is_iso_15924_code(code, strict=strict)
+
+    def match(self, other: Locale) -> LocaleMatch:
+        """
+        Return the degree of similarity between this locale and another one.
+
+        The degrees are ordered (see `LocaleMatch`), so that the best
+        available locale for a requested one is the one with the highest
+        degree, e.g., for `zho-Hant-HK`: `zho-Hant-HK` (identical), then
+        `zho-Hant` or `zho-Hant-TW` (same script), then `zho` or `zho-Hans`
+        (same language).
+
+
+        :param other: A `Locale` object to compare with the current locale
+            object.
+
+
+        :return: The degree of similarity between the two locales.
+        """
+        if self.language_code != other.language_code:
+            return LocaleMatch.DIFFERENT
+
+        if self.script_code != other.script_code:
+            return LocaleMatch.LANGUAGE
+
+        if self.country_code != other.country_code:
+            return LocaleMatch.SCRIPT
+
+        return LocaleMatch.IDENTICAL
+
     @model_serializer()
     def serialize_model(self) -> str:
         """
@@ -351,9 +521,7 @@ class Locale(BaseModel):
         locale.
 
 
-        :return: A string representation of the locale, i.e., an ISO 639-3
-            alpha-3 code (or alpha-2 code), optionally followed by a dash
-            character `-` and an ISO 3166-1 alpha-2 code.
+        :return: A string representation of the locale (see `to_string`).
         """
         return self.to_string()
 
@@ -368,11 +536,12 @@ class Locale(BaseModel):
 
 
         :return: A string representation of this locale compatible with HTTP
-            request, i.e., an ISO 639-3 alpha-2, optionally followed by a dash
-            character `-` and an ISO 3166-1 alpha-2 code.
+            request, i.e., an ISO 639-1 alpha-2 code, optionally followed by a
+            dash character `-` and an ISO 15924 alpha-4 code, optionally
+            followed by a dash character `-` and an ISO 3166-1 alpha-2 code
+            (e.g., `zh-Hant-HK`).
         """
-        return self.language_code[:2] if self.country_code is None \
-            else f'{self.language_code[:2]}-{self.country_code}'
+        return Locale.compose_locale(self.language_code[:2], self.country_code, self.script_code)
 
     def to_string(self) -> str:
         """
@@ -380,10 +549,11 @@ class Locale(BaseModel):
 
 
         :return: A string representation of the locale, i.e., an ISO 639-3
-            alpha-3 code (or alpha-2 code), optionally followed by a dash
-            character `-` and an ISO 3166-1 alpha-2 code.
+            alpha-3 code, optionally followed by a dash character `-` and an
+            ISO 15924 alpha-4 code, optionally followed by a dash character
+            `-` and an ISO 3166-1 alpha-2 code (e.g., `zho-Hant-HK`).
         """
-        return Locale.compose_locale(self.language_code, self.country_code)
+        return Locale.compose_locale(self.language_code, self.country_code, self.script_code)
 
     @field_validator('country_code', mode='before')
     @classmethod
@@ -434,6 +604,30 @@ class Locale(BaseModel):
         cls.assert_language_code(value, strict=True)
 
         return cls.__to_iso_639_3(value)
+
+    @field_validator('script_code', mode='before')
+    @classmethod
+    def validate_script_code(cls, value: str | None) -> str | None:
+        """
+        Validate the given script code as a valid ISO 15924 alpha-4 code.
+
+
+        :param value: An ISO 15924 alpha-4 script code (e.g., 'Hans' for
+            Simplified Chinese), written in any case, or `None`.
+
+
+        :return: An ISO 15924 alpha-4 code, written in title case, or `None`.
+
+
+        :raise ValueError: If the given script code not `None` and is invalid.
+        """
+        if any_utils.is_empty_or_none(value):
+            return None
+
+        value = value.title()
+        cls.assert_script_code(value, strict=True)
+
+        return value
 
 
 class LocaleJSONEncoder(json.JSONEncoder):
